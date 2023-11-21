@@ -4,7 +4,10 @@
 \usepackage[utf8]{inputenc}
 \usepackage{titlesec}
 \setcounter{secnumdepth}{4}
-\usepackage{multirow}                           % Extensión para tablas
+\usepackage{multirow}      
+\usepackage{algpseudocode} 
+\usepackage{multicol}
+\usepackage[Algoritmo]{algorithm}                    % Extensión para tablas
 \usepackage{minted}                             % Permite darle formato al código que se muestre.
 \usepackage{adjustbox}                          % Permite mas versatilidad para cosas como includegraphics.
 \usepackage{graphicx}                           % Para poner imágenes
@@ -355,7 +358,7 @@ Si bien estos trabajos no se relacionan directamente con la variante del problem
 
 \clearpage
 
-\chapter{Metodologia}
+\chapter{Marco teórico}
     \section{Modelo matemático}
     
     En la formulación de \cite{baldo_polynomial_2023} se describe la formulación del PRKP y realiza una linearización para transformar el problema a un problema de programación lineal (PL) compatible con solvers adecuados como Gurobi o Cplex. Para efectos de esta memoria, no es necesario usar la linearización del problema y se referiŕa a la primera formulación de baldo y se reservará su linearización para uso exclusivo como modelo de PL.
@@ -395,6 +398,7 @@ Si bien estos trabajos no se relacionan directamente con la variante del problem
     Y la restricción de presupuesto, como:
     
     \begin{equation}
+   		\label{eq:costs}
     	\left( \sum_{i=1}^I LC_i\cdot x_i\right)  + \max \left( \sum_{i=1}^I \Delta C_i\cdot y_i \right) \leq W
     \end{equation}
     
@@ -419,12 +423,11 @@ Si bien estos trabajos no se relacionan directamente con la variante del problem
     Dados los parámetros anteriores, se define la función objetivo \ref{objective_function}
     
     \begin{center}
-    	
     	\begin{equation}
     		\max f(x) = \sum_{i=1}^I p_i\cdot x_i + 
     		\sum_{A \in S}\left( PS_A \cdot \prod_{i \in A} x_i \right)
     		- \left( \sum_{i=1}^I LC_i\cdot x_i  + \max  \sum_{i=1}^I \Delta C_i\cdot y_i \right)
-    		\label{objective_function}
+    		\label{eq:objective_function}
     	\end{equation}
     \end{center}
     
@@ -444,9 +447,43 @@ Si bien estos trabajos no se relacionan directamente con la variante del problem
 \clearpage
   
 \chapter{Metodología}
-\section{Metodología propuesta}
 
-Se propone un solver
+\section{Algoritmo propuesto}
+
+Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa de un pequeño nivel de confianza sobre la solución final obtenida, el algoritmo usa un clasificador compuesto por una red neuronal que decide la probabilidad de que algun elemento no deba estar en la solucion final. Las predicciones se usan para asumir ceros en la solucion y reducir la instancia original a una mas pequeña mediante una transformación, este proceso se puede realizar un numero arbitrario de veces, mientras el clasificador mantega una alta confianza, una vez se cumplan ciertas condiciones, se detiene el algoritmo y se resuleve la instancia final reducida para obtener la solucion al problema.
+
+
+
+
+\section{Reduccion de instancias}
+
+Se puede reducir la complejidad de una instancia asumiendo la presencia de un elemento en la solucion optima, es decir , para un $i \in I$ se puede fijar $x_i=0$ o $x_i = 1$, para reducir el espacio de busqueda. Sin embargo, la formulacion del problema, en especifico \ref{eq:costs}, muestra que para calcular la restriccion de presupuesto, y \ref{eq:objective_function} la funcion objetivo, es necesario resolver un subproblema de optimización, que debe considerar todos los elementos de la instancia original, que estarán presentes en la solucion final, debido a esto, para reducir instancias, solo es posible definir $x_i=0$ para un $i$ que se quiera declarar. Así, sea $Z$ el conjunto de elementos que se quiere fijar como cero, es posible aplicar una transformacion a los parametros del problema, para generar una instancia de menor compljidad.
+
+	
+\begin{itemize}
+	\item $I' = I - Z$
+	\item $S' = S - \{A \in S, \exists i \in A: i \in Z\} $
+\end{itemize}
+
+
+De forma comprensiva, ya no es necesario considerar los elementos de Z en la solucion, pero mas importante,
+todas las sinergias polinomiales que poseían elementos en Z, ya no son alcanzables por ninguna solucion, por lo que es seguro eliminarlas de $S$, notar tambien que $\Gamma$ no es modificado.
+
+Al aplicar esta transformacion de forma iterativa es posible asumir ciertas propiedades:
+
+
+\begin{itemize}
+\item En cada paso, la solucion optima de cada iteracion de la instancia estará compuesta por una proporcion mayor de unos que de ceros. La proporcion se le llamará, la densidad $D$ de la instancia .
+
+\item  Como $\Gamma$ no cambia al eliminar ceros, es posible que se de la situacion en que $\Gamma > N$, en cuyo caso el problema pasa de ser un PRKP a PKP, puesto que para asegurar la robustes, solo es necesario considerar los costes altos de la solucion.
+
+\item  Existe un punto en el que ya no quedan ceros que eliminar, el cual sucede cuando \ref{eq:costs} se cumple para un $x_i$ compuesto solo de unos, lo que es posible calcular a medida que se ejecuta la iteración.
+\end{itemize}
+
+\section{Clasificador}
+
+El clasificador utilizado es una red nuronal de cinco capas que como entrada usa features calculadas para un elemento de la instancia con las que genera una prediccion sobre si el elemento tendrá un valor de cero o uno en la solución final.
+
 
 
 \begin{figure}[H]
@@ -487,7 +524,7 @@ Se propone un solver
 		\node at (-3,6) {$feature 1(i)$};
 		\node at (-3,5) {$feature 2(i)$};
 		\node at (-3,4) {$feature 3(i)$};
-		\node at (-3,3) {$feature 4(i)$};
+		\node at (-3,3) {$Random(i)$};
 		
 		\node at (2,10) {Capa $1$};
 		\node at (6,10) {Capa $N$};
@@ -498,7 +535,95 @@ Se propone un solver
 		
 	\end{tikzpicture}
 	\caption{Estructura general de la red}
+	\label{fig:network}
 \end{figure}
+
+
+\subsection{Entrenamiento}
+
+
+El entrenamiento de la red se realizará en 2 etapas sobre un conjunto de instancias, la primera etapa consiste en entrenar la red para predecir la solucion optima de cada instancia, y así crear un clasificador general, en la segunda etapa el clasificador se afina con instancias generadas desde el algoritmo iterativo de reduccion.
+
+
+Durante el primer proceso de entreamiento se usará un generador de numeros aleatorios para una de las features y en el afinamiento se alimentará esta feature con una metrica que indique, que tanto se ha reducido la instancia original hasta cierto punto.
+
+A los vectores de solucion optimos $y$ de cada instancia se les aplicara la transformacion \ref{eq:soltransformation}, y la red intentará aproximarlos, es por esto que en \ref{fig:network} se especifica la funcion de activacion tangente hiperbolica, pues distribuye la salida de la red en el rango $(-1,1)$.
+
+\begin{equation}
+	\tilde{y}_i = \begin{cases}
+		 1, & \text{si } y_i = 1 \\
+		-1,  & \text{si } y_i = -1
+		
+			\end{cases}
+	\label{eq:soltransformation}	
+\end{equation}
+
+Para una instancia especifica, y un $i$ dado, las features se definen como:
+
+\begin{multicols}{2}
+	
+
+
+\begin{equation}
+	F_1\left(i\right)   = \frac{P_i}{W}
+	\label{feature:1}
+\end{equation}
+
+\begin{equation}
+	F_2\left(i\right)   = \frac{LC_i}{W}
+	\label{feature:2}
+\end{equation}
+
+\begin{equation}
+	F_3\left(i\right)   = \frac{UC_i}{W}
+	\label{feature:3}
+\end{equation}
+
+\begin{equation}
+	F_4\left(i\right)   = \text{CSol}_i
+	\label{feature:4}
+\end{equation}
+
+\begin{equation}
+	F_5\left(i\right)   = \frac{\#\{A\in S,i \in A \}}{N}
+	\label{feature:5}
+\end{equation}
+
+\begin{equation}
+	F_6\left(i\right)   = \frac{\#\{A\in S,i \in A \}}{W}
+	\label{feature:6}
+\end{equation}
+
+
+\begin{equation}
+	F_7\left(i\right)   = \frac{\Gamma}{N}
+	\label{feature:7}
+\end{equation}
+
+
+\begin{equation}
+	F_8\left(i\right)   = \frac{\sum^S_{A: i\in A} PS_{A}}{\sum^S_{A} PS_A}
+	\label{feature:8}
+\end{equation}
+
+\begin{equation}
+	F_9\left(i\right)   = \text{Random}\left(i\right)
+	\label{feature:9}
+\end{equation}
+
+\end{multicols}
+\begin{algorithm}
+	\caption{Estructura del algoritmo general}\label{alg:general}
+	\begin{algorithmic}
+		\State \textbf{let} $I$			  \Comment{El conjunto de elementos}
+		\State \textbf{let} $Classifier$  \Comment{El clasificador}
+		\Loop
+		
+		\EndLoop
+	\end{algorithmic}
+\end{algorithm}
+
+\ref{feature:1}
 
 
 
@@ -538,12 +663,6 @@ Estas instancias ejecutarán resueltas en un i7-8550U con 4 nucleos 8 hilos, 32G
 
 \clearpage
 
-% Este segundo apéndice tiene información general sobre LaTeX. Está comentado para que no aparezca en tu documento, pero si lo deseas puedes descomentarlo para ver su contenido.
 
-%\chapter{Algunos consejos sobre \LaTeX{}}
-%    \subfile{Otros/Consejos}
-%\clearpage
-
-% ÉXITO EN TU TESIS
 
 \end{document} 
