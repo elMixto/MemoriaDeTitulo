@@ -1,0 +1,26 @@
+\documentclass[../Main.tex]{subfiles}
+\begin{document}
+
+\section{Notas}
+Este es un resumen de la investigación hasta el momento 09/10/2023, con características experimentales y otras cosas.
+
+\subsection{Infraestructura}
+Para facilitar la investigación se programaron las herramientas necesarias para escribir solvers genericos y evaluarlos unos con otros, además de portar los solvers de \cite{baldo_polynomial_2023} a esta para poder realizar análisis comparativos de forma sencilla en el futuro.
+
+\section{Experimentos iniciales}
+
+\subsection{Solver personalizado}
+Para comprobar la factibilidad de las técnicas con los tipos de datos que estoy trabajando, implementé una version modificada del clasificador de random forest \cite{baldo_polynomial_2023} usando un clasificador con redes neuronales customizado. La versión modificada, con una red neuronal general, tiene un rendimiento similar al clasificador de la bibliografía sin demasiado ajuste de parámetros.
+
+\subsection{Reduciendo la dimensionalidad de las sinergias polinomiales}
+
+Debido a que la parte más importante de las instancias de PRKP respecto al beneficio de la función objetivo es la dimensionalidad de las sinergias polinomiales, exploré técnicas para poder reducir este espacio, que fuesen compatibles con estructuras de redes neuronales.
+
+Se creó una red predictiva de sinergias que intentase recordar las sinergias en un espacio más pequeño, este sistema usó una estrategia de cuantización de vectores, y de clusterización de valores para simplificar el espacio obteniendo resultados satisfactorios.
+
+Si bien por sí sola esta red no es demasiado útil para reemplazarse como parámetro en la formulación del problema, su uso como representación de las sinergias al momento de generar features para una red mas avanzada demostro ser util al combinarse con el primer solver modificado.
+
+
+
+\biblio %Se necesita para referenciar cuando se compilan subarchivos individuales - NO SACAR
+\end{document}
