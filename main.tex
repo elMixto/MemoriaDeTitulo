@@ -7,27 +7,27 @@
 \usepackage{multirow}      
 \usepackage{algpseudocode} 
 \usepackage{multicol}
-\usepackage[Algoritmo]{algorithm}                    % Extensión para tablas
-\usepackage{minted}                             % Permite darle formato al código que se muestre.
-\usepackage{adjustbox}                          % Permite mas versatilidad para cosas como includegraphics.
-\usepackage{graphicx}                           % Para poner imágenes
-\usepackage{amsmath, amssymb, amsthm}           % paquetes matemáticos
-\usepackage{parskip}                            % Elimina la sangría
-\urlstyle{sf}                                   % Tipo de url
-\usepackage{color}                              % Agrega colores.
-\usepackage{subcaption}                         % Permite subtextos en las figuras. Es incompatible con el paquete subfig y subfigure
-\usepackage[toc,page]{appendix}                 % Permite el uso de apéndices
-\usepackage{chngcntr}                           % Necesario para enumerar las tablas
-\counterwithin{table}{section}                  % Numeración de tablas 
-\counterwithin{figure}{section}                 % Numeración de figuras
-\numberwithin{equation}{section}                % Numeración de ecuaciones
-\hyphenpenalty=100000                           % No se dividen las palabras al terminar una línea
-\sloppy                                         % Ayuda a que las cosas no se salgan de los márgenes.
-\raggedbottom                                   % Hace que el tamaño de las páginas llegue hasta donde llegue el texto, no agrega espacio vertical
-\usepackage{xparse,nameref}                     % Ayuda en la creación de nuevos comandos
-\usepackage[bottom,hang,flushmargin]{footmisc}  % notas al pie de página están fijas al fondo y sin sangría
-\interfootnotelinepenalty=10000                 % Previene que las notas al pie de página se pasen a la siguiente página cuando son muy largas
-\usepackage{lipsum}                             % Para crear texto de relleno.
+\usepackage[Algoritmo]{algorithm}               
+\usepackage{minted}                             
+\usepackage{adjustbox}                          
+\usepackage{graphicx}                           
+\usepackage{amsmath, amssymb, amsthm}           
+\usepackage{parskip}                            
+\urlstyle{sf}                                   
+\usepackage{color}                              
+\usepackage{subcaption}                         
+\usepackage[toc,page]{appendix}                 
+\usepackage{chngcntr}                           
+\counterwithin{table}{section}                  
+\counterwithin{figure}{section}                 
+\numberwithin{equation}{section}                
+\hyphenpenalty=100000                           
+\sloppy                                         
+\raggedbottom                                   
+\usepackage{xparse,nameref}                     
+\usepackage[bottom,hang,flushmargin]{footmisc}  
+\interfootnotelinepenalty=10000                 
+\usepackage{lipsum}                     
 
 % --------- Editar de aquí en adelante --------
 
@@ -202,14 +202,15 @@
 
 
 \vfill
-\begin{center}
-\begin{figure}
-    \centering
-    \includegraphics[width=1.1\linewidth]{Images/image.png}
-    \caption{Cronograma actual}
-    \label{fig:cronograma}
-\end{figure}
-\end{center}
+
+%\begin{center}
+%\begin{figure}
+%    \centering
+%    \includegraphics[width=1.1\linewidth]{Images/image.png}
+%    \caption{Cronograma actual}
+%    \label{fig:cronograma}
+%\end{figure}
+%\end{center}
 
 %----------------Página de derechos de autor: elegir entre a) o b) y borrar/comentar la opción NO utilizada-----------------
 \thispagestyle{empty}
@@ -330,9 +331,9 @@ Debido a la complejidad espacial del PRKP, se han explorado aplicaciones del pro
 Por tanto, este trabajo propone la exploración de técnicas avanzadas de machine learning para resolver el PRKP y obtener resultados más eficientes y cercanos a la solución óptima con base en requerimientos de tiempo, memoria y robustez de las soluciones.
 
 \section{Objetivos}
-\subsubsection{Objetivo general}
+\subsubsection*{Objetivo general}
 Implementar una heurística basada en machine learning para resolver el PRKP.
-\subsubsection{Objetivos específicos}
+\subsubsection*{Objetivos específicos}
 \begin{itemize}
 	\item Revisar la literatura relacionada con problemas de la mochila similares y metodologías aplicables.
 	\item Diseñar una heurística basada en machine learning para el PRKP.
@@ -450,21 +451,43 @@ Si bien estos trabajos no se relacionan directamente con la variante del problem
 
 \section{Algoritmo propuesto}
 
-Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa de un pequeño nivel de confianza sobre la solución final obtenida, el algoritmo usa un clasificador compuesto por una red neuronal que decide la probabilidad de que algun elemento no deba estar en la solucion final. Las predicciones se usan para asumir ceros en la solucion y reducir la instancia original a una mas pequeña mediante una transformación, este proceso se puede realizar un numero arbitrario de veces, mientras el clasificador mantega una alta confianza, una vez se cumplan ciertas condiciones, se detiene el algoritmo y se resuleve la instancia final reducida para obtener la solucion al problema.
+Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa de un pequeño nivel de confianza sobre la solución final obtenida. El algoritmo usa una red neuronal como clasificador que con base en ciertas características de cada elemento, decide su probabilidad deba estar o no en la solución final, estas predicciones se usan para asumir ceros en la solución y reducir la instancia original a una más pequeña mediante una transformación, este proceso se puede realizar un número arbitrario de veces, mientras el clasificador mantenga una alta confianza, una vez se cumplan ciertas condiciones, se detiene el algoritmo y se resuelve la instancia final reducida para obtener la solución al problema.
+
+\begin{algorithm}[H]
+	\caption{Algoritmo general}\label{alg:general}
+	\begin{algorithmic}
+		\State $IToFixHistory$ 			\Comment{Elementos que han sido fijados como cero}
+		\State $OInstance$ 				\Comment{Instancia original a resolver}
+		\State $threshold$  			\Comment{Mínimo nivel de confianza tolerado}
+		\State $Instance \gets OInstance$
+		\Loop
+			\State $F \gets features$ \Comment{Vector de features del elemento $i$}
+			\State $\tilde{x} \gets Classifier(F)$ \Comment{Predicción del clasificador}
+			\State $IToFix \gets GetIToFix(\tilde{x})$ \Comment{Se obtienen los ítems para fijar como ceros }
+			\State $ItoFixHistory \gets IToFix$
+			\State $Instance \gets Reduce(Instance,IToFix)$ \Comment{Instancia reducida}
+			\If{$ ItoFix == 0$ \textbf{or} $\min(\tilde{x}) <$ threshold }
+				\State $\textbf{break}$ \Comment{Si el clasificador no encuentra más elementos que fijar o la predicción tiene mala confianza se detiene el algoritmo}
+			\EndIf
+		\State $y \gets ExactSolver(Instance)$ \Comment{Solución óptima para la instancia}
+		\EndLoop
+	\end{algorithmic}
+\end{algorithm}
+
+Los puntos claves a definir del algoritmo general \ref{alg:general} son la reducción de las instancias, y el funcionamiento del clasificador, y en menor medida el cómo interpretar la predicción para fijar valores.
 
 
 
 
-\section{Reduccion de instancias}
 
-Se puede reducir la complejidad de una instancia asumiendo la presencia de un elemento en la solucion optima, es decir , para un $i \in I$ se puede fijar $x_i=0$ o $x_i = 1$, para reducir el espacio de busqueda. Sin embargo, la formulacion del problema, en especifico \ref{eq:costs}, muestra que para calcular la restriccion de presupuesto, y \ref{eq:objective_function} la funcion objetivo, es necesario resolver un subproblema de optimización, que debe considerar todos los elementos de la instancia original, que estarán presentes en la solucion final, debido a esto, para reducir instancias, solo es posible definir $x_i=0$ para un $i$ que se quiera declarar. Así, sea $Z$ el conjunto de elementos que se quiere fijar como cero, es posible aplicar una transformacion a los parametros del problema, para generar una instancia de menor compljidad.
+\section{Reducción de instancias}
 
+Se puede reducir la complejidad de una instancia asumiendo la presencia de un elemento en la solución óptima, es decir , para un $i \in I$ se puede fijar $x_i=0$ o $x_i = 1$, para reducir el espacio de búsqueda. Sin embargo, la formulación del problema, en específico \ref{eq:costs}, muestra que para calcular la restricción de presupuesto, y \ref{eq:objective_function} la función objetivo, es necesario resolver un subproblema de optimización, que debe considerar todos los elementos de la instancia original, que estarán presentes en la solución final, debido a esto, para reducir instancias, solo es posible definir $x_i=0$ para un $i$ que se quiera declarar. Así, sea $Z$ el conjunto de elementos que se quiere fijar como cero, es posible aplicar una transformación a los parámetros del problema, para generar una instancia de menor complejidad.
 	
 \begin{itemize}
 	\item $I' = I - Z$
 	\item $S' = S - \{A \in S, \exists i \in A: i \in Z\} $
 \end{itemize}
-
 
 De forma comprensiva, ya no es necesario considerar los elementos de Z en la solucion, pero mas importante,
 todas las sinergias polinomiales que poseían elementos en Z, ya no son alcanzables por ninguna solucion, por lo que es seguro eliminarlas de $S$, notar tambien que $\Gamma$ no es modificado.
@@ -480,10 +503,40 @@ Al aplicar esta transformacion de forma iterativa es posible asumir ciertas prop
 \item  Existe un punto en el que ya no quedan ceros que eliminar, el cual sucede cuando \ref{eq:costs} se cumple para un $x_i$ compuesto solo de unos, lo que es posible calcular a medida que se ejecuta la iteración.
 \end{itemize}
 
+
+Se define $Z$ con base en la predicción del clasificador, si $\tilde{x} = Clasificador(I)$, la prediccion continua del clasificador puede ser interpretada como un vector de probabilidades, donde valores cercanos a cero son interpretados como que el clasificador predice para ese extremo y equivalente para el las predicciones cercanas a uno.
+
+Se definen entonces dos parametros para generar Z, $\tau$ y $\mu$:
+
+\begin{itemize}
+	\item $\tau$ Corresponde al $threshold$, representa la confianza mínima necesaria, para decidir incluir un item en Z
+	\item $\mu$ Es el número máximo de elementos que incluir en Z.
+\end{itemize}
+
+A base de estos parámetros, el algoritmo \ref{alg:z} construye Z
+
+\begin{algorithm}[H]
+	\caption{$Z(\tilde{x},\tau,\mu)$}\label{alg:z}
+	\begin{algorithmic}
+		\State $A \gets \{ i \in I: x_i \leq \tau \}$
+		\State $A \gets Sort(A)$  \Comment{Ordenar de forma ascendente en base a los valores de $x_i$}
+		\State $Z \gets \{\}$	  
+		\State $count \gets 0$
+		\ForAll{$i \in A$}		  \Comment{Agregar los $\mu$ items con menor $x_i$}
+			\State $Z \gets i$
+			\State $count \gets count + 1$
+			\If{$count == \mu$}
+				\State \textbf{break}
+			\EndIf
+		\EndFor
+		\State Z
+	\end{algorithmic}
+\end{algorithm}
+
+
 \section{Clasificador}
 
-El clasificador utilizado es una red nuronal de cinco capas que como entrada usa features calculadas para un elemento de la instancia con las que genera una prediccion sobre si el elemento tendrá un valor de cero o uno en la solución final.
-
+El clasificador utilizado es una red neuronal de cinco capas que como entrada usa features calculadas para un elemento de la instancia con las que genera una predicción sobre si el elemento tendrá un valor de cero o uno en la solución final.
 
 
 \begin{figure}[H]
@@ -521,10 +574,10 @@ El clasificador utilizado es una red nuronal de cinco capas que como entrada usa
 		
 		\draw (Output) to (Transformation);
 		
-		\node at (-3,6) {$feature 1(i)$};
-		\node at (-3,5) {$feature 2(i)$};
-		\node at (-3,4) {$feature 3(i)$};
-		\node at (-3,3) {$Random(i)$};
+		\node at (-1.5,6) {$f_1(i)$};
+		\node at (-1.5,5) {$f_2(i)$};
+		\node at (-1.5,4) {$f_3(i)$};
+		\node at (-1.5,3) {$f_4(i)$};
 		
 		\node at (2,10) {Capa $1$};
 		\node at (6,10) {Capa $N$};
@@ -539,108 +592,138 @@ El clasificador utilizado es una red nuronal de cinco capas que como entrada usa
 \end{figure}
 
 
-\subsection{Entrenamiento}
-
-
-El entrenamiento de la red se realizará en 2 etapas sobre un conjunto de instancias, la primera etapa consiste en entrenar la red para predecir la solucion optima de cada instancia, y así crear un clasificador general, en la segunda etapa el clasificador se afina con instancias generadas desde el algoritmo iterativo de reduccion.
-
-
-Durante el primer proceso de entreamiento se usará un generador de numeros aleatorios para una de las features y en el afinamiento se alimentará esta feature con una metrica que indique, que tanto se ha reducido la instancia original hasta cierto punto.
-
-A los vectores de solucion optimos $y$ de cada instancia se les aplicara la transformacion \ref{eq:soltransformation}, y la red intentará aproximarlos, es por esto que en \ref{fig:network} se especifica la funcion de activacion tangente hiperbolica, pues distribuye la salida de la red en el rango $(-1,1)$.
+Como se muestra en la figura \ref{fig:network}, la red no intenta predecir el valor del $x_i$ optimo directamente, sino que predice la transformación \ref{eq:soltransformation}, que es más adecuada para la red, usando la función de activación tangente hiperbólica para encasillar la salida al rango $[-1,1]$.
+De esta forma, la salida de la red se reconstruye como  $\tilde{x_i} = y^{-1}(\tilde{y}(i))$
 
 \begin{equation}
-	\tilde{y}_i = \begin{cases}
-		 1, & \text{si } y_i = 1 \\
-		-1,  & \text{si } y_i = -1
+	y(i) = \begin{cases}
+		1, & \text{si } x_i = 1 \\
+		-1,  & \text{si } x_i = 0
 		
-			\end{cases}
+	\end{cases}
 	\label{eq:soltransformation}	
 \end{equation}
 
-Para una instancia especifica, y un $i$ dado, las features se definen como:
+La entrada de la red es un vector que contiene todas las features del elemento $i$:
+$$
+	f(i) = \textbf{(}f_1(i),f_2(i), \hdots f_\phi(i))\textbf{)}
+$$
+donde $\phi$ es del número de features
 
-\begin{multicols}{2}
-	
-
-
-\begin{equation}
-	F_1\left(i\right)   = \frac{P_i}{W}
-	\label{feature:1}
-\end{equation}
+En base a esto es util definir la matriz de features $\times$ items como:
 
 \begin{equation}
-	F_2\left(i\right)   = \frac{LC_i}{W}
-	\label{feature:2}
-\end{equation}
-
-\begin{equation}
-	F_3\left(i\right)   = \frac{UC_i}{W}
-	\label{feature:3}
-\end{equation}
-
-\begin{equation}
-	F_4\left(i\right)   = \text{CSol}_i
-	\label{feature:4}
-\end{equation}
-
-\begin{equation}
-	F_5\left(i\right)   = \frac{\#\{A\in S,i \in A \}}{N}
-	\label{feature:5}
-\end{equation}
-
-\begin{equation}
-	F_6\left(i\right)   = \frac{\#\{A\in S,i \in A \}}{W}
-	\label{feature:6}
+F(I) = 
+\left( 
+\begin{matrix}
+	f(1)\\
+	f(2)\\
+	\vdots \\
+	f(N-1)\\
+	f(N)\\
+\end{matrix}
+\right)
 \end{equation}
 
 
-\begin{equation}
-	F_7\left(i\right)   = \frac{\Gamma}{N}
-	\label{feature:7}
-\end{equation}
 
 
-\begin{equation}
-	F_8\left(i\right)   = \frac{\sum^S_{A: i\in A} PS_{A}}{\sum^S_{A} PS_A}
-	\label{feature:8}
-\end{equation}
 
-\begin{equation}
-	F_9\left(i\right)   = \text{Random}\left(i\right)
-	\label{feature:9}
-\end{equation}
+Así, la red es una función definida como
+\paragraph*{Preduccion para item:}
+$$
+	Net(f) = \tilde{x_i}: f\in [0,1]^n \rightarrow x_i \in[0,1]
+$$
 
-\end{multicols}
-\begin{algorithm}
-	\caption{Estructura del algoritmo general}\label{alg:general}
+\paragraph*{Prediccion para todos los items de una instancia:}
+
+$$
+	Net(F) = \tilde{x}: F\in [0,1]^{n\times N} \rightarrow x \in[0,1]^{N}
+$$
+
+
+\subsection{Entrenamiento}
+
+Se realizarán dos etapas de entrenamiento sobre un conjunto de instancias, la primera etapa consiste en entrenar la red para predecir la solución óptima de cada instancia, y así crear un clasificador general, en la segunda etapa la red se afina con instancias generadas desde el algoritmo iterativo de reducción. Además , los datos con los que se entrenará la red serán generados por un solver exacto que calcula $x$, óptimo para cada instancia. 
+
+\begin{algorithm}[H]
+	\caption{Primer entrenamiento}\label{alg:training}
 	\begin{algorithmic}
-		\State \textbf{let} $I$			  \Comment{El conjunto de elementos}
-		\State \textbf{let} $Classifier$  \Comment{El clasificador}
-		\Loop
-		
-		\EndLoop
+		\State TrainingSet \Comment{Conjunto de instancias de entrenamiento}
+		\State Net 		   \Comment{Red neuronal}
+		\State Optimizer   \Comment{Optmizador para la red}
+		\State Solver      \Comment{Solver exacto para el problema}
+		\For{Instance $\in$ TrainingSet}
+			\State $x \gets Solver(Instance)$ \Comment{Vector booleano x con la solución óptima de la instancia}
+			\For{$i \in I$}
+				\State $\tilde{x_i} \gets Net(f(i))$  \Comment{Prediccion de la red de $x_i$ desde las features}
+				\State $loss \gets Loss(x_i,\tilde{x_i})$
+				\State $Net \gets Optimizer(Net,loss)$ \Comment{Un paso de optimización de la red}
+			\EndFor
+		\EndFor
+		\State $Net$ \Comment{Red entrenada}
 	\end{algorithmic}
 \end{algorithm}
 
-\ref{feature:1}
+Notar que el algoritmo \ref{alg:training} realiza el proceso de optimización calculando la el gradiente y realizando el ajuste de la red por cada ítem de la instancia. Se usa la implementación de pytorch de Adam, algoritmo introducido por \cite{kingma2017adam} como alternativa para descenso de gradiente estocástico. Y se usa como función de perdida, simplemente la diferencia lineal entre los valores de entrenamiento, en este caso, entre la predicción y el valor óptimo de $x_i$.
+
+
+\begin{algorithm}[H]
+	\caption{Segundo entrenamiento}\label{alg:tunning}
+	\begin{algorithmic}
+		\State TrainingSet \Comment{Conjunto de instancias de entrenamiento}
+		\State Net \Comment{Red neuronal pre-entrenada}
+		\State Optimizer \Comment{Optmizador para la red}
+		\For{OInstance $\in$ TrainingSet}
+				\State $ZHistory$
+				\State $Instance \gets OInstance$
+				\Loop
+					\State $\tilde{x} \gets Net(F(I))$  \Comment{Vector de predicción de la red}
+					\State $ZHistory \gets Z(\tilde{x},\tau,\mu)$
+					\State $Instance \gets Reduce(Instance,Z(\tilde{x},\tau,\mu))$ \Comment{Reducir la instancia}
+					\If{$ \#Z == 0$ \textbf{or} $\min(\tilde{x}) \leq \tau$ }
+						\State $\textbf{break}$ 
+					\EndIf
+				\State $x \gets Solver(Instance)$  \Comment{Solución óptima de la instancia reducida}
+				\State $\tilde{x} \gets Net(F(I))$ \Comment{Predigo para la instancia reducida}
+			\For{$i \in I$}
+				\State $\tilde{x}_i \gets Net(f(i))$  
+				\State $loss \gets Loss(x_i,\tilde{x_i})$
+				\State $Net \gets Optimizer(Net,loss)$
+			\EndFor
+			\EndLoop
+		\EndFor
+		\State $Net$ \Comment{Red entrenada}
+	\end{algorithmic}
+\end{algorithm}
+
+El segundo entrenamiento sigue la estructura del algoritmo general \ref{alg:general}, para así resolver instancias que son generadas por la reducción.
 
 
 
 
 \section{Instancias}
 
-Las instancias reales que se resolverán provienen de un generador de instancias implementado por \cite{baldo_polynomial_2023} cuyas sinergias tienen en su mayoría beneficios de cero. Las instancias con $I$ mayor a mil, tienen un exponencial de sinergias, para $300 \le I \le 1000$, se usa una generación cuadrática de sinergias, mientras que para instancias con menos de 300 ítems, se agregan sinergias de forma lineal.
+Las instancias reales que se resolverán provienen de un generador de instancias implementado por \cite{baldo_polynomial_2023} cuyas sinergias tienen en su mayoría beneficios de cero. Las instancias con $I$ mayor a mil, tienen una generacion exponencial de sinergias, para $300 \le I \le 1000$, se usa una generación cuadrática de sinergias, mientras que para instancias con menos de 300 ítems, se agregan sinergias de forma lineal.
 
 Para comparar el rendimiento del algoritmo propuesto con los solvers existentes propuestos por \cite{baldo_polynomial_2023}, se usara el mismo conjunto de instancias.
 
-Estas instancias ejecutarán resueltas en un i7-8550U con 4 nucleos 8 hilos, 32GB ram en Linux 6.6.1.
+Estas instancias se ejecutarán resueltas en un i7-8550U con 4 nucleos 8 hilos, 32GB ram en Linux 6.6.1.
+
  
 \clearpage
+
+\chapter{Resultados Experimentales}
+
+
+
+
+
 
 \chapter{Discusión}
     
 \clearpage
+
 
 \chapter{Conclusión}
     
@@ -659,7 +742,64 @@ Estas instancias ejecutarán resueltas en un i7-8550U con 4 nucleos 8 hilos, 32G
 
 \appendix   % Empieza el ambiente de apéndices, desde ahora en adelante los capítulos, secciones, tablas, figuras, etc. vuelven a empezar su numeración
 
-\chapter{Material}                
+\chapter{Material}
+
+\chapter{Ecuaciones}
+\section*{Features entrenamiento 1 del clasificador}
+\begin{multicols}{2}
+	
+	
+	\begin{equation}
+		F_1\left(i\right)   = \frac{P_i}{W}
+		\label{feature:1}
+	\end{equation}
+	
+	\begin{equation}
+		F_2\left(i\right)   = \frac{LC_i}{W}
+		\label{feature:2}
+	\end{equation}
+	
+	\begin{equation}
+		F_3\left(i\right)   = \frac{UC_i}{W}
+		\label{feature:3}
+	\end{equation}
+	
+	\begin{equation}
+		F_4\left(i\right)   = \frac{\Gamma}{N}
+		\label{feature:4}
+	\end{equation}
+	
+	\begin{equation}
+		F_5\left(i\right)   = \text{CSol}_i
+		\label{feature:5}
+	\end{equation}
+	
+	\begin{equation}
+		F_6\left(i\right)   = \frac{\#\{A\in S,i \in A \}}{\#S}
+		\label{feature:6}
+	\end{equation}
+	
+	\begin{equation}
+		F_7\left(i\right)   = \frac{\#\{A\in S,i \in A: PS_A > 0 \}}{W}
+		\label{feature:7}
+	\end{equation}
+	
+	\begin{equation}
+		F_8\left(i\right)   = \frac{\#\{A\in S,i \in A: PS_A < 0 \}}{W}
+		\label{feature:8}
+	\end{equation}
+	
+	\begin{equation}
+		F_9\left(i\right)   = \frac{\sum^S_{A: i\in A} PS_{A}}{\sum^S_{A} PS_A}
+		\label{feature:9}
+	\end{equation}
+	
+	\begin{equation}
+		F_10\left(i\right)   = \text{Random}\left(i\right)
+		\label{feature:10}
+	\end{equation}
+	
+\end{multicols}
 
 \clearpage
 
