@@ -699,8 +699,10 @@ Notar que el algoritmo \ref{alg:training} realiza el proceso de optimización ca
 
 El segundo entrenamiento sigue la estructura del algoritmo general \ref{alg:general}, para así resolver instancias que son generadas por la reducción.
 
-
-
+ 
+\clearpage
+\chapter{Resultados Experimentales}
+En este capitulo se presentará la comparacion cuantitativa de resultados, se recontextualizarán los metodos de \cite{baldo_polynomial_2023} en base a las diferencias de hardware, así como también
 
 \section{Instancias}
 
@@ -708,12 +710,14 @@ Las instancias reales que se resolverán provienen de un generador de instancias
 
 Para comparar el rendimiento del algoritmo propuesto con los solvers existentes propuestos por \cite{baldo_polynomial_2023}, se usará el mismo conjunto de instancias.
 
-Estas instancias se ejecutarán resueltas en un i7-8550U con 4 nucleos 8 hilos, 32GB ram en Linux 6.6.1.
+El hardware utilizado para evaual las instancias consta de un proecesador Intel i7-8550U con 4 nucleos 8 hilos y 32GB ram en Linux 6.6.1.
 
- 
-\clearpage
-\chapter{Resultados Experimentales}
 
+\section{Métodos a comparar}
+
+Se realizaró un analisis comparativo entre las heuristicas implementadas por \cite{baldo_polynomial_2023}, BaldoGA y BaldoML y la metodología aplicada por esta investigación. Como solver exacto se utilizó "Gurobi Optimizer version 11.0" y será la linea base para evaluar el rendimiento de los 3 metodos anteriores.
+
+\subsec
 
 
 
