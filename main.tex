@@ -1,4 +1,4 @@
-\documentclass[spanish, a4paper, 12pt, twoside, openany,final]{book} 
+\documentclass[spanish, a4paper, 12pt, openany,final]{book} 
 \usepackage{textcomp}
 \usepackage[T1]{fontenc, url}
 \usepackage[utf8]{inputenc}
@@ -6,6 +6,7 @@
 \setcounter{secnumdepth}{4}
 \usepackage{multirow}      
 \usepackage{algpseudocode} 
+\usepackage{datetime2}
 \usepackage{multicol}
 \usepackage[Algoritmo]{algorithm}               
 \usepackage{minted}                             
@@ -18,9 +19,12 @@
 \usepackage{subcaption}                         
 \usepackage[toc,page]{appendix}                 
 \usepackage{chngcntr}                           
-\counterwithin{table}{section}                  
-\counterwithin{figure}{section}                 
-\numberwithin{equation}{section}                
+\counterwithout{figure}{section}
+\counterwithout{figure}{chapter}        
+\counterwithout{table}{section}
+\counterwithout{table}{chapter}    
+\counterwithout{equation}{chapter}    
+\counterwithout{equation}{section}
 \hyphenpenalty=100000                           
 \sloppy                                         
 \raggedbottom                                   
@@ -32,12 +36,19 @@
 % --------- Editar de aquí en adelante --------
 
 % ----- Apariencia e idioma ----- 
-\usepackage[spanish]{babel}                                         % Idioma
+\usepackage[spanish,mexico]{babel}
 \graphicspath{{Images/}{../Images/}}                                % Dónde estarán las imágenes
-\usepackage[left=4cm,top=4cm,bottom=2.5cm,right=2.5cm]{geometry}    % Márgenes del documento
+\usepackage[left=2.5cm,top=4cm,bottom=2.5cm,right=2.5cm]{geometry}    % Márgenes del documento
 \usepackage{setspace}                                               % Permite elegir el interlineado
 \linespread{1.3}                                                    % Interlineado de uno y medio. 1.6 es interlineado doble.
-\usepackage{microtype}                                              % Permite la modificación de los caracteres.
+\usepackage{microtype}       
+\usepackage{chngcntr}
+   
+
+\renewcommand{\thefigure}{\arabic{figure}}
+\addto\captionsspanish{\renewcommand{\listtablename}{Índice de Tablas}}
+\addto\captionsspanish{\renewcommand{\listfigurename}{Índice de Figuras}}
+                        % Permite la modificación de los caracteres.
 
 
 % ----- Secciones ----- % ESTA PARTE SE UTILIZA EN CASO DE USAR LA CLASE ARTICLE
@@ -185,11 +196,10 @@
 		
 		\vspace{1,5\baselineskip}
 		
-		\large{Memoria de titulo presentada a la Facultad de ingeniería de la Universidad de Concepción para optar al título profesional de ingeniero civil industrial} 
+		\large{Memoria de titulo presentada a la Facultad de Ingeniería de la Universidad de Concepción para optar al título profesional de Ingeniero Civil Industrial} 
 		
 		\vspace{1,5\baselineskip}
-		Octubre 2023\\ %Mes y año de la tesis, solo primera letra del mes en mayúsculas
-		Concepción, Chile %Ciudad y país de publicación.
+		\DTMspanishMonthname{\month} 2023  \\
 		\vspace{1,5\baselineskip}
 		
 		\large{\textbf{Profesor Guía: Carlos Contreras Bolton}}\\
@@ -318,17 +328,20 @@ Se autoriza la reproducción total o parcial, con fines académicos, por cualqui
 % Los nombres de los archivos no pueden llevar tíldes ni espacios para el correcto funcionamiento del compilador, esto no tiene nada que ver con que tengan o no tilde en el documento final.
 
 \chapter{Introducción}
+En este capítulo se presentan los antecedentes generales acerca del Problema polinomial robusto de la mochila, las variantes de las cuales se deriva y metodologías de solución asociadas a estas. Los objetivos generales y específicos de esta memoria y la estructura del documento.
+
+
 \section{Antecedentes generales}
 
-El problema de la mochila (KP, por sus siglas en inglés, Knapsack Problem) es un problema clásico de la investigación de operaciones, que modela generalmente la necesidad de elegir un conjunto de elementos con costos y beneficios individuales, con una restricción de capacidad máxima, con el fin de maximizar el beneficio. El KP ha sido exhaustivamente estudiado debido a su estructura sencilla, y también debido a que muchos otros problemas de optimización más complejos tienen como un subproblema al KP \citep*{martello_knapsack_1990}.
+El problema de la mochila (KP, por sus siglas en inglés, Knapsack Problem) es un problema clásico de la investigación de operaciones. Generalmente, el KP modela la necesidad de elegir un conjunto de elementos con costos y beneficios individuales, con una restricción de capacidad máxima, con el fin de maximizar el beneficio. El KP ha sido ampliamente estudiado por su estructura sencilla, y también debido a que muchos otros problemas de optimización más complejos lo tienen como subproblema \citep*{martello_knapsack_1990}.
 
-El problema tiene muchas  variantes, una de las cuales es la versión robusta. El RKP (por sus siglas en inglés, Robust Knapsack Problem) formulado originalmente por \cite{eilon_application_1987} para resolver problemas de asignación de presupuesto con aplicaciones reales, muchos de los parámetros del problema están asociados a incertidumbre. El RKP se plantea para encontrar soluciones que sean factibles para todas las posibles variaciones en los costos de los elementos \citep{monaci_exact_2013}.
+El KP tiene muchas  variantes, una ellas es la versión robusta, RKP (por sus siglas en inglés, Robust Knapsack Problem). Este fue formulado originalmente por \cite{eilon_application_1987} para resolver problemas de asignación de presupuesto con aplicaciones reales, muchos de los parámetros del problema están asociados a incertidumbre. El RKP fue planteado para encontrar soluciones que sean factibles para todas las posibles variaciones en los costos de elementos \citep{monaci_exact_2013}.
 
-Otra variante es el problema polinomial de la mochila (PKP, por sus siglas en inglés, Polynomial Knapsack Problem) que incluye el concepto de sinergias, es decir, que la elección de una o más alternativas específicas otorga un beneficio o costo extra según estas relaciones. EL PKP sirve para modelar sistemas cuyas alternativas presentan conflictos entre ellas, o que cooperan para generar mayor beneficio \citep{baldo_polynomial_2023}. De este problema surge el problema polinomial robusto de la mochila (PRKP, por sus siglas en inglés, Polynomial Robust Knapsack Problem). El PRKP toma en cuenta parámetros inciertos y sinergias polinomiales para modelar problemas de selección de alternativas, que se perjudican o benefician entre sí y además muestran comportamiento estocástico.
+Otra variante es la versión polinomial de la mochila (PKP, por sus siglas en inglés, Polynomial Knapsack Problem) que incluye el concepto de sinergias, es decir, que la elección de una o más alternativas específicas otorga un beneficio o costo extra según estas relaciones. El PKP sirve para modelar sistemas cuyas alternativas presentan conflictos entre ellas, o que cooperan para generar mayor beneficio \citep{baldo_polynomial_2023}.Así, de este problema surge el polinomial robusto (PRKP, por sus siglas en inglés, Polynomial Robust Knapsack Problem). El PRKP toma en cuenta parámetros inciertos y sinergias polinomiales para modelar problemas de selección de alternativas, que se perjudican o benefician entre sí y además muestran comportamiento estocástico.
 
-Debido a la complejidad espacial del PRKP, se han explorado aplicaciones del problema cuadrático de la mochila (QKP, por sus siglas en inglés, Quadratic Knapsack Problem) \citep{gallo_quadratic_1980} y el problema cúbico de la mochila (CKP, por sus siglas en inglés, Cubic Knapsack Problem) \citep{forrester_strengthening_2022} El QKP presenta sinergias entre dos elementos y ha demostrado ser útil en un gran espectro de aplicaciones como posicionamiento satelital \citep{witzgall_mathematical_1975}, localizaciones de centros de transporte como aeropuertos, ferrocarriles o terminales de carga \citep{rhys_selection_1970}. El CKP es extendido desde el QKP y considera sinergias hasta con tres elementos, además posee aplicaciones como en el problema de satisfacción Max 3-SAT \citep{kofler_penalty_2014}, el problema de selección \citep{gallo_fast_1989}, el problema de alineación de redes \citep{mohammadi_triangular_2017}, y la detección y tratamiento de enfermedades de transmisión sexual \citep{zhao_treatments_2008}.
+Debido a la complejidad espacial del PRKP, se han explorado aplicaciones del problema cuadrático de la mochila (QKP, por sus siglas en inglés, Quadratic Knapsack Problem) \citep{gallo_quadratic_1980} y el problema cúbico de la mochila (CKP, por sus siglas en inglés, Cubic Knapsack Problem) \citep{forrester_strengthening_2022} El QKP presenta sinergias entre dos elementos y ha demostrado ser útil en un gran espectro de aplicaciones como posicionamiento satelital \citep{witzgall_mathematical_1975}, localizaciones de centros de transporte como aeropuertos, ferrocarriles o terminales de carga \citep{rhys_selection_1970}. El CKP es extendido desde el QKP y considera sinergias hasta con tres elementos. Además, posee aplicaciones como en el problema de satisfacción Max 3-SAT \citep{kofler_penalty_2014}, el problema de selección \citep{gallo_fast_1989}, el problema de alineación de redes \citep{mohammadi_triangular_2017}, y la detección y tratamiento de enfermedades de transmisión sexual \citep{zhao_treatments_2008}.
 
-Por tanto, este trabajo propone la exploración de técnicas avanzadas de machine learning para resolver el PRKP y obtener resultados más eficientes y cercanos a la solución óptima con base en requerimientos de tiempo, memoria y robustez de las soluciones.
+Este trabajo propone la exploración de técnicas de machine learning para resolver el PRKP, encontrar una metodología competitiva con aquellas planteadas en la literatura y obtener resultados comparables.
 
 \section{Objetivos}
 \subsubsection*{Objetivo general}
@@ -341,30 +354,71 @@ Implementar una heurística basada en machine learning para resolver el PRKP.
 	\item Evaluar los resultados y comparar el rendimiento con las metodologías expuestas anteriormente desde la literatura.
 \end{itemize}
 
-\section{Revisión de literatura}
-El problema polinomial robusto de la mochila es un problema de selección de alternativas, donde, dado un presupuesto, cada alternativa tiene un costo nominal y un costo máximo con el que puede variar. Distintas combinaciones de estas alternativas producen una serie de efectos en el beneficio final. El número de elementos en cada una de estas posibles combinaciones es lo que se considera, el grado de la sinergia polinomial
+\section{Estructura del documento}
 
-Existen variedad trabajos enfocados en el QKP y en menor medida para el CKP. Sin embargo, recientemente \cite{baldo_polynomial_2023} ha introducido por primera vez una metodología para resolver el PRKP, utilizando un algoritmo genético y otro algoritmo basado en machine learning. Este último usa un clasificador random forest predice la probabilidad de cada elemento de estar presente en la solución óptima, para decidir basado en una heurística, si considerar cada elemento o no, fijando los elementos con mayor confianza, y resolviendo para el resto de elementos usando gurobi.
-
-Se han realizado revisiones bibliográficas exhaustivas para el KP, como en \cite{kellerer_knapsack_2004} y \cite{pisinger_quadratic_2007} El primero revisa una variedad de definiciones para el problema, así como métodos exactos, algoritmos aproximados, versiones relajadas y descripciones de variaciones comunes del problema en las que se encuentra el QKP. Mientras que \cite{pisinger_quadratic_2007}, se enfoca directamente en el QKP, revisando multitud de enfoques para solucionarlo, descomposiciones y relajaciones lagrangianas, linealizaciones de los parámetros y otras metodologías avanzadas.  Por otro lado, el CKP ha sido abordado por \cite{forrester_strengthening_2022} mejorando las formulaciones lineales clásicas para resolver este problema.
-
-Es interesante revisar enfoques basados en machine learning para abordar este tipo de problemas. \cite{li_novel_2021} ha estudiado el uso de redes neuronales para obtener predicciones de KPs con funciones objetivo no lineales, obteniendo buenos resultados con una estructura basada en teoría de juegos, junto al uso de redes neuronales adversarias.
-
-\cite{rezoug_application_2022} usa distintas técnicas para evaluar las características de los elementos, entre ellos redes neuronales, regresión de procesos gaussianos, random forest y support vector regression. Así, resuelve el problema original, usando solo un subconjunto de los elementos, para luego, mediante el descenso de gradiente y el uso de características de los elementos, decidir cuáles de los anteriormente excluidos, agregar a la solución inicial obtenida. El modelo de machine learning usado para evaluar que elementos son incluidos muestra resultados competitivos con los demás clasificadores e impactos en tiempo computacional insignificantes.
-
-\cite{afshar_state_2020} propuso un algoritmo para generar soluciones para el KP usando un modelo de Deep Reinforcement Learning que selecciona los elementos de forma voraz. El algoritmo propuesto construye las soluciones con base en las decisiones del modelo y genera soluciones con una razón de similitud con el óptimo del 99.9\% usando una arquitectura de A2C con un paso de cuantización de características.
-
-Si bien estos trabajos no se relacionan directamente con la variante del problema propuesto, sí evidencian que las técnicas de Machine learning pueden usarse de forma efectiva para caracterizar y construir soluciones para el PRKP.
-
+El documento consta de 6 capítulos, en los cuales se discutirá, el modelo matemático representando el problema (2), la metodología propuesta para resolverlo (3), un análisis comparativo de los resultados experimentales (4), y finalmente una revisión y discusión para concluir el documento.
 
 \clearpage
 
-\chapter{Marco teórico}
+\chapter{Problema Polinomial Robusto de la mochila}
+Este capítulo comprende la definición formal del problema junto al modelo matemático de programación entera. Además, explora literatura asociada a técnicas y metodologías empleadas para la resolución de otros problemas de la mochila que pueden ser extendidos al PRKP.
+
+\section{Descripción del problema}
+	El PRKP se define formalmente como un conjunto de elementos $I = \{1,2,\hdots,N\}$ donde estos tienen un beneficio asociado $P_i \in \mathbb{R}:i\in I$. Ademas, los elementos poseen un coste de comportamiento estocástico que puede variar de forma continua entre una cota inferior y una superior, $C_i \in [LC_i,UC_i]$, donde $LC_i$ es el costo base, y $UC_i$ el costo máximo. De forma aleatoria solo algunos elementos tienen comportamiento estocástico, aquellos que no, cumplen que $C_i = LC_i$. El parámetro que define cuantos elementos de $I$ pueden tener comportamiento estocástico es $\Gamma\leq N$, es decir $|\{i: C_i > LC_i\}| \leq \Gamma$. 	Además existe un presupuesto máximo $W$ para los costes.
+	
+	El conjunto de sinergias polinomiales se define como $S = \{ A: A \subseteq I \land |A|>1  \}$. Para cada subconjunto de elementos de $I$, existe un beneficio asociado $PS_A$.
+	
+	El objetivo del problema es encontrar un subconjunto de elementos $X \subseteq I$ que maximice el beneficio total de los elementos de $X$ sumado a los beneficios de sinergias, que aplican cuando $A\subseteq X$, y que además, para cualquier variación estocástica en costes de los elementos.
+	
+	\subsection*{Ejemplo de PRKP}
+		$$I =\{1,2,3\}$$
+		$$W = 10.0$$
+		$$\Gamma = 2$$
+
+	\begin{table}[H]
+		\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		$i$ & 1 & 2 & 3 \\
+		\hline
+		$PS_i$ & 3.0 & 6.0 & 10.0 \\
+		\hline
+		$LC_i$ & 2.0 & 3.0 & 4.0 \\
+		\hline
+		$UC_i$ & 5.0 & 4.0 & 7.0 \\
+		\hline
+	\end{tabular}
+	\caption{Beneficios y costos de los ítems}
+	\end{table}
+	
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|c|c|}
+			\hline
+			$A$    & $PS_A$\\
+			\hline
+			$\{1,2\}$ & 1.0 \\
+			\hline
+			$\{1,3\}$ & 2.0 \\
+			\hline
+			$\{2,3\}$ & -1.0\\
+			\hline
+			$\{1,2,3\}$ & 3.0\\
+			\hline
+		\end{tabular}
+		\caption{Beneficios por sinergias}
+	\end{table}
+	
+	
+	
+	
+    
     \section{Modelo matemático}
     
-    En la formulación de \cite{baldo_polynomial_2023} se describe la formulación del PRKP y realiza una linearización para transformar el problema a un problema de programación lineal (PL) compatible con solvers adecuados como Gurobi o Cplex. Para efectos de esta memoria, no es necesario usar la linearización del problema y se referiŕa a la primera formulación de baldo y se reservará su linearización para uso exclusivo como modelo de PL.
     
-    La formulación clásica consiste en un conjunto elementos o alternativas que poseen un beneficio, un costo nominal y un costo máximo asociados, definidos como:
+    En la formulación de \cite{baldo_polynomial_2023} se describe la formulación del PRKP y realiza una linealización para transformar el modelo de programación no lineal a un problema de programación lineal (PL) compatible con solvers adecuados como Gurobi o Cplex. Para efectos de esta memoria, no es necesario usar la linealización del problema y se referirá a la primera formulación de baldo y se reservará su linealización para uso exclusivo como modelo de PL.
+    
+    La formulación consiste en un conjunto elementos o alternativas que poseen un beneficio, un costo nominal y un costo máximo asociados, definidos como:
     
     \begin{itemize}
     	\item $I$, El conjunto de elementos posibles, de cardinalidad $N$
@@ -439,14 +493,23 @@ Si bien estos trabajos no se relacionan directamente con la variante del problem
     	\sum_{i=1}^I LC_i\cdot x_i  + \max \sum_{i=1}^I \Delta C_i\cdot y_i \leq W        
     \end{equation}
     
-    
-    \subsection{Complejidad}
-    Si bien la complejidad del espacio de búsqueda del KP tradicional es de $O\left( 2^n
-    \right)$, la complejidad del problema ha demostrado ser $O\left( nW\right)$ usando técnicas de branch and bound y acercamientos de programación dinámica, no así con esta variante.
-    
-    La dificultad de trabajar con el PRKP está en su complejidad espacial de $O\left( 2^n\right)$ asociada a las sinergias polinomiales, cada posible combinación de elementos puede tener un beneficio independiente, por lo que cualquier algoritmo que resuelva el problema de forma exacta debe, como mínimo, leer el espacio de búsqueda.
 \clearpage
+\section{Revisión de literatura}
+
+
+El trabajo de \cite{baldo_polynomial_2023} ha introducido por primera vez una metodología para resolverlo, proponiendo un algoritmo genético y un algoritmo basado en machine learning. Este último utiliza un clasificador random forest que predice la probabilidad de cada elemento de estar presente en la solución óptima. Esta predicción se usa para fijar variables de decisión, reduciendo así el tiempo de ejecución de un solver exacto.
+
+\cite{li_novel_2021} ha estudiado el uso de redes neuronales para obtener predicciones de KPs con funciones objetivo no lineales, obteniendo buenos resultados con una estructura basada en teoría de juegos, junto al uso de redes neuronales adversarias.
+
+\cite{rezoug_application_2022} aborda el KP usando distintas técnicas para evaluar las características de los elementos, entre ellos redes neuronales, regresión de procesos gaussianos, random forest y support vector regression. Así, resuelve el problema original, usando solo un subconjunto de los elementos. Luego, mediante el descenso del gradiente y el uso de características de los elementos, decide cuáles de los elementos excluidos agregar a la solución inicial obtenida. En sus resultados muestra que el modelo machine learning entrega soluciones similares a los otros clasificadores, con menores tiempos de ejecución.
+
+\cite{afshar_state_2020} propuso un algoritmo para generar soluciones para el KP usando un modelo de Deep Reinforcement Learning que selecciona los elementos de forma greedy. El algoritmo propuesto construye las soluciones en base a las decisiones del modelo y genera soluciones con una razón de similitud con el óptimo del 99.9\%. Además, usa una arquitectura de A2C con un paso de cuantización de características, que reduce la complejidad espacial del problema en la red, resultando en modelos que usan menos memoria y se ejecutan más rápido.
+
+Si bien estos trabajos no se relacionan directamente con la variante del problema propuesto, sí evidencian que las técnicas de Machine learning pueden usarse de forma efectiva para caracterizar y construir soluciones para el PRKP.
   
+
+
+
 \chapter{Metodología}
 
 \section{Algoritmo propuesto}
@@ -489,14 +552,14 @@ Se puede reducir la complejidad de una instancia asumiendo la presencia de un el
 	\item $S' = S - \{A \in S, \exists i \in A: i \in Z\} $
 \end{itemize}
 
-De forma comprensiva, ya no es necesario considerar los elementos de Z en la solucion, pero mas importante,
-todas las sinergias polinomiales que poseían elementos en Z, ya no son alcanzables por ninguna solucion, por lo que es seguro eliminarlas de $S$, notar tambien que $\Gamma$ no es modificado.
+De forma comprensiva, ya no es necesario considerar los elementos de Z en la solución, pero más importante,
+todas las sinergias polinomiales que poseían elementos en Z, ya no son alcanzables por ninguna solución, por lo que es seguro eliminarlas de $S$, notar también que $\Gamma$ no es modificado.
 
-Al aplicar esta transformacion de forma iterativa es posible asumir ciertas propiedades:
+Al aplicar esta transformación de forma iterativa es posible asumir ciertas propiedades:
 
 
 \begin{itemize}
-\item En cada paso, la solucion optima de cada iteracion de la instancia estará compuesta por una proporcion mayor de unos que de ceros. La proporcion se le llamará, la densidad $D$ de la instancia .
+\item En cada paso, la solución óptima de cada iteración de la instancia estará compuesta por una proporción mayor de unos que de ceros. La proporción se le llamará, la densidad $D$ de la instancia .
 
 \item  Como $\Gamma$ no cambia al eliminar ceros, es posible que se de la situacion en que $\Gamma > N$, en cuyo caso el problema pasa de ser un PRKP a PKP, puesto que para asegurar la robustes, solo es necesario considerar los costes altos de la solucion.
 
@@ -509,7 +572,7 @@ Se define $Z$ con base en la predicción del clasificador, si $\tilde{x} = Clasi
 Se definen entonces dos parametros para generar Z, $\tau$ y $\mu$:
 
 \begin{itemize}
-	\item $\tau$ Corresponde al $threshold$, representa la confianza mínima necesaria, para decidir incluir un item en Z
+	\item $\tau$ Corresponde al $threshold$, representa la confianza mínima necesaria, para decidir incluir un ítem en Z
 	\item $\mu$ Es el número máximo de elementos que incluir en Z.
 \end{itemize}
 
@@ -533,6 +596,9 @@ A base de estos parámetros, el algoritmo \ref{alg:z} construye Z
 	\end{algorithmic}
 \end{algorithm}
 
+El threshold $\tau$ se establece por el usuario para definir la precision y velocidad de ejecucion del algoritmo y pertenece al rango de valores $[0,0.5]$.
+
+El número máximo de elementos que bloquear en cada paso $Z$ se ha definido como $Z = \max\{\frac{N}{\log_{10}{N}},100\}$ para cada instancia que se genera por reducción.
 
 \section{Clasificador}
 
@@ -626,9 +692,6 @@ F(I) =
 \end{equation}
 
 
-
-
-
 Así, la red es una función definida como
 \paragraph*{Preduccion para item:}
 $$
@@ -640,6 +703,14 @@ $$
 $$
 	Net(F) = \tilde{x}: F\in [0,1]^{n\times N} \rightarrow x \in[0,1]^{N}
 $$
+
+Las features que se utilizaran, codifican $P_i$, $LC_i$,$UC_i$, $ContSol_i$ , $\Gamma$, $Noise$, Las definiciones se encuentran en el anexo \ref{eq:all_features}.
+
+Entre estas:
+\begin{itemize}
+	\item $ContSol_i$ se refiere a la solución de la relajación continua del problema en que la variable de decisión $x_i$ es continua.
+	\item Noise es un generador de números aleatorios, que se usa para definir nodos vacíos extra para la red neuronal, esto da lugar para reemplazar esta feature por otra asociada al estado del algoritmo general.
+\end{itemize}
 
 
 \subsection{Entrenamiento}
@@ -697,12 +768,12 @@ Notar que el algoritmo \ref{alg:training} realiza el proceso de optimización ca
 	\end{algorithmic}
 \end{algorithm}
 
-El segundo entrenamiento sigue la estructura del algoritmo general \ref{alg:general}, para así resolver instancias que son generadas por la reducción.
+El segundo entrenamiento sigue la estructura del algoritmo general \ref{alg:general}, para así resolver instancias que son generadas por la reducción. La feature \ref{feature:6} que representa un numero aleatorio es reemplazada por $\frac{N_{\text{InstanciaActual}}}{N_{\text{InstanciaOriginal}}}$ para codificar un nivel de progesión en la red.
 
  
 \clearpage
 \chapter{Resultados Experimentales}
-En este capitulo se presentará la comparacion cuantitativa de resultados, se recontextualizarán los metodos de \cite{baldo_polynomial_2023} en base a las diferencias de hardware, así como también
+En este capitulo se presentará la comparación cuantitativa de resultados, se recontextualizarán los métodos de \cite{baldo_polynomial_2023} con base en las diferencias de hardware, así como también
 
 \section{Instancias}
 
@@ -713,12 +784,89 @@ Para comparar el rendimiento del algoritmo propuesto con los solvers existentes 
 El hardware utilizado para evaual las instancias consta de un proecesador Intel i7-8550U con 4 nucleos 8 hilos y 32GB ram en Linux 6.6.1.
 
 
-\section{Métodos a comparar}
+\section{Comparaciones}
 
-Se realizaró un analisis comparativo entre las heuristicas implementadas por \cite{baldo_polynomial_2023}, BaldoGA y BaldoML y la metodología aplicada por esta investigación. Como solver exacto se utilizó "Gurobi Optimizer version 11.0" y será la linea base para evaluar el rendimiento de los 3 metodos anteriores.
+Los resultados completos  BaldoGA y BaldoML y la metodología aplicada por esta investigación. Como solver exacto se utilizó "Gurobi Optimizer version 11.0" y será la linea base para evaluar el rendimiento de los 3 métodos anteriores.
 
-\subsec
+\subsection*{Resultados generales}
+\subsubsection*{Comparacion de solver exacto con trabajo anterior}
+En \ref{fig:solver_times} se muestran los tiempos para resolver instancias usando el solver exacto, en contraste con \cite{baldo_polynomial_2023}, que solo resolvió instancias de hasta 650 elementos con tiempos hasta 7000s, en este caso los tiempos están acotados en cerca de 550 segundos.
 
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}{.5\textwidth}
+		\includegraphics[width=1\linewidth]{graphs/baldo_solver_times.png}
+		\caption{Ejecucion Gurobi \cite{baldo_polynomial_2023}}
+	\end{subfigure}%
+	\begin{subfigure}{.5\textwidth}
+		\includegraphics[scale=0.656]{graphs/solver_times.png}
+		\caption{Ejecucion Gurobi }
+	\end{subfigure}%
+	\caption{Tiempos de ejecucion solver exacto}
+	\label{fig:solver_times}
+\end{figure}
+
+\subsubsection*{Rendimiento normalizado}
+Se presenta en las figuras \ref{fig:full_gap} y \ref{fig:full_timegap} la comparación general de rendimiento de los métodos. En primer lugar BaldoGA tienen el comportamiento esperado desde los resultados de \cite{baldo_polynomial_2023}, con un $\bar{gap}$ de alrededor de un 
+%todo Calcular el gap medio de BaldoGA
+. por otro lado BaldoML tiene un gap promedio inferior al $1\%$ esto es debido a diferencias en la inicializacion del modelo randomforest al momento del entrenamiento, pero en mayor medida, por la diferencia de hardware, existe un subconjunto de instancias en las que el tiempo de ejecución del modelo, sumado al solver, superan el tiempo de ejecución del solver exacto, sobretodo al momento de calcular las features para la ejecucion, sobre las sinergias polinomiales.
+
+Respecto a los tiempos de ejecucion, se puede notar que el algoritmo propuesto con un $\tau = 0.1$ genera resultados similares a BaldoGA mantiendo un 90\% de los tiempos de ejecución, menores a la media de los de BaldoGA. Ademas, BaldoML, a pesar de obtener resultados con un gap muy cercano a cero, sus tiempos de ejecución tienden a ser elevados y en la figura \ref{fig:full_timegap} se muestra visualmente que cerca de un 20\% de los tiempos de ejecución es superior al tiempo del solver exacto.
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.7]{graphs/full_gap_comparison.png}
+	\caption{Gap \% de todos los metodos presentados}
+	\label{fig:full_gap}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.7]{graphs/full_timegap_comparison.png}
+	\caption{TimeGap de todos los metodos presentados}
+	\label{fig:full_timegap}
+\end{figure}
+
+
+
+El cuadro \ref{tab:comparison_table} es un extracto de la tabla completa de resultados \ref{tab:full_comparison_table}, que muestra BaldoML, BaldoGA y El algoritmo propuesto con un $\tau=0.25$. Es posible notar, que el algoritmo es menos preciso al encontrar soluciones de instancias relativamente pequeñas, pero se estabiliza con un gap promedio de alrededor de un 3\% para instancias de mayor tamaño.
+
+\begin{table}[h]
+
+	\begin{adjustbox}{width=\columnwidth,center}
+	\begin{tabular}{cccccccccccc}
+		
+		\multicolumn{3}{c}{Método}&  &\multicolumn{8}{c}{N}\\
+		\cline{1-3} \cline{5-12}
+		\multicolumn{3}{c}{} &  & 100  & 300  & 500  & 700  & 900  & 1100 & 1300 & 1500\\
+		\hline
+		\multirow{4}{*}{BaldoGA} & \multirow{2}{*}{Gap(\%)} & $\mu$ && 1.74 & 3.07 & 3.04 & 3.42 & 3.74 & 3.4 & 4.1 & 3.9 \\
+		&                          & $\sigma$ & & 1.15 & 0.905 & 0.866 & 0.844 & 1.09 & 1.07 & 6.89 & 1.18 \\
+		\cline{2-3}
+		& \multirow{2}{*}{Time(s)} & $\mu$ && 0.44 & 3.3 & 4.5 & 7.18 & 9.86 & 5.61 & 7.22 & 8.89 \\
+		&                          & $\sigma$ & & 0.207 & 1.32 & 1.75 & 2.93 & 4.08 & 2.19 & 2.44 & 3.21 \\
+		\hline		 						 
+		\multirow{4}{*}{BaldoML} & \multirow{2}{*}{Gap(\%)} & $\mu$ && 0.15 & 0.0723 & 0.0751 & 0.105 & 0.037 & 1.03 & 2.01 & 2.02 \\
+		&                          & $\sigma$ & & 0.339 & 0.151 & 0.202 & 0.218 & 0.0736 & 10.0 & 14.0 & 14.0 \\
+		\cline{2-3}
+		& \multirow{2}{*}{Time(s)} & $\mu$ && 0.475 & 3.74 & 7.9 & 12.9 & 21.1 & 18.6 & 30.8 & 38.2 \\
+		&                          & $\sigma$ & & 0.195 & 3.25 & 5.86 & 11.3 & 15.9 & 60.6 & 83.0 & 82.2 \\
+		\hline		 						 
+		
+		\multirow{4}{*}{$\tau=0.25$} & \multirow{2}{*}{Gap(\%)} & $\mu$ && 7.47 & 3.94 & 3.42 & 3.37 & 3.7 & 3.43 & 3.52 & 3.33 \\
+		&                          & $\sigma$ & & 3.81 & 1.97 & 2.0 & 1.9 & 2.29 & 1.97 & 1.93 & 1.7 \\
+		\cline{2-3}
+		& \multirow{2}{*}{Time(s)} & $\mu$ && 0.0472 & 0.335 & 0.65 & 1.1 & 1.74 & 1.2 & 1.6 & 2.01 \\
+		&                          & $\sigma$ & & 0.0202 & 0.118 & 0.278 & 0.383 & 0.655 & 0.614 & 0.818 & 0.904 \\
+		\hline		 						 	
+	
+	\end{tabular}
+	
+	\end{adjustbox}
+		\caption{Comparación general por número de elementos}
+		\label{tab:comparison_table}	
+\end{table}
 
 
 
@@ -747,11 +895,163 @@ Se realizaró un analisis comparativo entre las heuristicas implementadas por \c
 
 \chapter{Material}
 
+\section{Rendimiento de métodos en distintos tamaños de entrada}
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}{.5\textwidth}
+		\includegraphics[width=1\linewidth]{graphs/BaldoML_time.png}
+		\caption{Tiempo vs Numero de elementos}
+	\end{subfigure}%
+	\begin{subfigure}{.5\textwidth}
+		\includegraphics[width=1\linewidth]{graphs/BaldoML_gap.png}
+		\caption{Gap vs Número de Elementos}
+	\end{subfigure}%
+	\caption{Rendimiento BaldoML}
+	\label{fig:perf_baldoml}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}{.5\textwidth}
+		\includegraphics[width=1\linewidth]{graphs/BaldoGA_gap.png}
+		\caption{Tiempo vs Numero de elementos}
+	\end{subfigure}%
+	\begin{subfigure}{.5\textwidth}
+		\includegraphics[width=1\linewidth]{graphs/BaldoGA_time.png}
+		\caption{Gap vs Numero de Elementos}
+	\end{subfigure}%
+	\caption{Rendimiento BaldoGA}
+	\label{fig:perf_baldoga}
+\end{figure}
+
+
+\newcommand{\resultadosZ}[1]{
+	\begin{figure}[h]
+		\centering
+		\begin{subfigure}{.5\textwidth}
+			\includegraphics[width=1\linewidth]{graphs/Z_threshold#1_time.png}
+			\caption{Tiempo vs Numero de elementos}
+		\end{subfigure}%
+		\begin{subfigure}{.5\textwidth}
+			\includegraphics[width=1\linewidth]{graphs/Z_threshold#1_gap.png}
+			\caption{$Gap(\%)$ vs Numero de Elementos}
+		\end{subfigure}%
+		\caption{Rendimiento Algorimo propuesto $(\tau=#1)$}
+		\label{fig:perf_z_#1}
+	
+	\end{figure}
+}
+
+\resultadosZ{0.05}
+\resultadosZ{0.1}
+\resultadosZ{0.15}
+\resultadosZ{0.2}
+\resultadosZ{0.25}
+\resultadosZ{0.3}
+\resultadosZ{0.35}
+\resultadosZ{0.4}
+\resultadosZ{0.45}
+\resultadosZ{0.5}
+
+
+
+	\begin{table}[h]
+	\centering
+	\begin{adjustbox}{width=\columnwidth,center}
+		\begin{tabular}{|ccc|cccccccc|}
+			\hline
+			\multicolumn{3}{|c}{Método} & \multicolumn{8}{c|}{N}\\
+			\hline
+			\multicolumn{3}{|c|}{\text{}}  & 100  & 300  & 500  & 700  & 900  & 1100 & 1300 & 1500 \\
+			\hline
+			\multirow{4}{*}{BaldoGA}   & \multirow{2}{*}{Gap(\%)} 	  & $\mu$    & 1.74 & 3.07 & 3.04 & 3.42 & 3.74 & 3.4 & 4.1 & 3.9\\
+			&                                                     	  & $\sigma$ & 1.15 & 0.905 & 0.866 & 0.844 & 1.09 & 1.07 & 6.89 & 1.18 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)}  							  & $\mu$    & 0.44 & 3.3 & 4.5 & 7.18 & 9.86 & 5.61 & 7.22 & 8.89\\
+			&                           							  & $\sigma$ & 0.207 & 1.32 & 1.75 & 2.93 & 4.08 & 2.19 & 2.44 & 3.21 \\ 
+			\hline		 						 
+			\multirow{4}{*}{BaldoML} & \multirow{2}{*}{Gap(\%)}       & $\mu$    & 0.15 & 0.0723 & 0.0751 & 0.105 & 0.037 & 1.03 & 2.01 & 2.02\\
+			&                                                         & $\sigma$ & 0.339 & 0.151 & 0.202 & 0.218 & 0.0736 & 10.0 & 14.0 & 14.0 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)}                                & $\mu$    & 0.475 & 3.74 & 7.9 & 12.9 & 21.1 & 18.6 & 30.8 & 38.2\\
+			&                                                         & $\sigma$ & 0.195 & 3.25 & 5.86 & 11.3 & 15.9 & 60.6 & 83.0 & 82.2 \\
+			\hline
+			\multirow{4}{*}{$\tau_{0.05}$} & \multirow{2}{*}{Gap(\%)} & $\mu$    & 2.48 & 1.34 & 1.12 & 1.09 & 1.14 & 1.12 & 1.02 & 0.839\\
+			&                                                         & $\sigma$ & 2.48 & 1.08 & 0.922 & 0.868 & 0.996 & 1.01 & 0.965 & 0.837 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)}                                & $\mu$    & 0.138 & 0.665 & 1.32 & 2.46 & 4.08 & 3.43 & 4.84 & 6.68\\
+			&                                                         & $\sigma$ & 0.104 & 0.391 & 0.874 & 1.74 & 2.98 & 2.8 & 3.83 & 4.69 \\
+			\hline
+			\multirow{4}{*}{$\tau_{0.1}$} & \multirow{2}{*}{Gap(\%)}  & $\mu$    & 4.2 & 2.19 & 1.89 & 1.87 & 1.92 & 1.85 & 1.8 & 1.58\\
+			&                                                         & $\sigma$ & 3.17 & 1.18 & 1.14 & 1.3 & 1.33 & 1.3 & 1.35 & 1.19 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)}                                & $\mu$    & 0.0914 & 0.511 & 0.929 & 1.6 & 2.5 & 2.07 & 2.84 & 3.88\\
+			&                                                         & $\sigma$ & 0.0735 & 0.281 & 0.562 & 0.848 & 1.52 & 1.7 & 2.12 & 3.11 \\
+			\hline
+			\multirow{4}{*}{$\tau_{0.15}$} & \multirow{2}{*}{Gap(\%)} & $\mu$    & 5.65 & 2.81 & 2.49 & 2.42 & 2.65 & 2.42 & 2.45 & 2.15\\
+			&                                                         & $\sigma$ & 3.36 & 1.34 & 1.47 & 1.55 & 1.76 & 1.6 & 1.67 & 1.32 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)}                                & $\mu$    & 0.0653 & 0.415 & 0.767 & 1.37 & 2.18 & 1.65 & 2.26 & 2.9\\
+			&                                                         & $\sigma$ & 0.0491 & 0.207 & 0.392 & 0.66 & 1.25 & 1.22 & 1.6 & 1.97 \\
+			\hline
+			\multirow{4}{*}{$\tau_{0.2}$} & \multirow{2}{*}{Gap(\%)}  & $\mu$    & 6.68 & 3.4 & 2.99 & 2.9 & 3.2 & 2.94 & 2.97 & 2.75\\
+			&                                                         & $\sigma$ & 3.55 & 1.65 & 1.76 & 1.76 & 2.04 & 1.79 & 1.8 & 1.49 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)} 								  & $\mu$    & 0.0537 & 0.36 & 0.689 & 1.22 & 1.95 & 1.41 & 1.9 & 2.32\\
+			&                                                   	  & $\sigma$ & 0.0313 & 0.148 & 0.3 & 0.527 & 1.03 & 0.933 & 1.28 & 1.25 \\
+			\hline
+			\multirow{4}{*}{$\tau_{0.25}$} & \multirow{2}{*}{Gap(\%)} & $\mu$    & 7.47 & 3.94 & 3.42 & 3.37 & 3.7 & 3.43 & 3.52 & 3.33\\
+			&                                                   	  & $\sigma$ & 3.81 & 1.97 & 2.0 & 1.9 & 2.29 & 1.97 & 1.93 & 1.7 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)} 								  & $\mu$    & 0.0472 & 0.335 & 0.65 & 1.1 & 1.74 & 1.2 & 1.6 & 2.01\\
+			&                                                         & $\sigma$ & 0.0202 & 0.118 & 0.278 & 0.383 & 0.655 & 0.614 & 0.818 & 0.904 \\
+			\hline
+			\multirow{4}{*}{$\tau_{0.3}$} & \multirow{2}{*}{Gap(\%)}  & $\mu$    & 8.27 & 4.36 & 3.76 & 3.78 & 4.17 & 3.87 & 4.06 & 3.87\\
+			&                                                   	  & $\sigma$ & 4.03 & 2.23 & 2.16 & 2.08 & 2.41 & 2.13 & 2.05 & 1.88 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)} 								  & $\mu$    & 0.044 & 0.317 & 0.611 & 1.04 & 1.58 & 1.06 & 1.41 & 1.79\\
+			&                                                   	  & $\sigma$ & 0.0142 & 0.0979 & 0.232 & 0.299 & 0.407 & 0.426 & 0.538 & 0.574 \\
+			\hline
+			\multirow{4}{*}{$\tau_{0.35}$} & \multirow{2}{*}{Gap(\%)} & $\mu$    & 8.89 & 4.75 & 4.12 & 4.21 & 4.62 & 4.32 & 4.53 & 4.4\\
+			&                                                   	  & $\sigma$ & 4.17 & 2.49 & 2.32 & 2.25 & 2.6 & 2.28 & 2.15 & 2.1 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)} 								  & $\mu$    & 0.0428 & 0.302 & 0.575 & 0.984 & 1.51 & 0.982 & 1.3 & 1.61\\
+			&                                                   	  & $\sigma$ & 0.0112 & 0.0699 & 0.177 & 0.199 & 0.286 & 0.251 & 0.272 & 0.211 \\
+			\hline
+			\multirow{4}{*}{$\tau_{0.4}$} & \multirow{2}{*}{Gap(\%)}  & $\mu$    & 9.5 & 5.02 & 4.45 & 4.57 & 5.04 & 4.71 & 4.96 & 4.88\\
+			&                                                   	  & $\sigma$ & 4.26 & 2.67 & 2.49 & 2.4 & 2.75 & 2.43 & 2.27 & 2.27 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)}                                & $\mu$    & 0.0413 & 0.295 & 0.55 & 0.943 & 1.45 & 0.938 & 1.24 & 1.59\\
+			&                                                         & $\sigma$ & 4.950e-03 & 0.0571 & 0.128 & 0.123 & 0.161 & 0.163 & 0.077 & 0.0932 \\
+			\hline
+			\multirow{4}{*}{$\tau_{0.45}$} & \multirow{2}{*}{Gap(\%)} & $\mu$    & 10.0 & 5.27 & 4.77 & 4.94 & 5.42 & 5.05 & 5.32 & 5.27\\
+			&                                                         & $\sigma$ & 4.35 & 2.89 & 2.67 & 2.56 & 2.88 & 2.58 & 2.38 & 2.43 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)}                                & $\mu$    & 0.0416 & 0.292 & 0.535 & 0.921 & 1.43 & 0.918 & 1.23 & 1.59\\
+			&                                                         & $\sigma$ & 4.670e-03 & 0.0485 & 0.0889 & 0.0716 & 0.0948 & 0.0513 & 0.0667 & 0.0893 \\
+			\hline
+			\multirow{4}{*}{$\tau_{0.5}$}& \multirow{2}{*}{Gap(\%)}   & $\mu$    & 10.4 & 5.49 & 5.03 & 5.29 & 5.73 & 5.36 & 5.64 & 5.61\\
+			&                                                         & $\sigma$ & 4.5 & 3.08 & 2.83 & 2.75 & 2.98 & 2.75 & 2.52 & 2.61 \\
+			\cline{3-11}
+			& \multirow{2}{*}{Time(s)}                                & $\mu$    & 0.0416 & 0.285 & 0.528 & 0.917 & 1.44 & 0.913 & 1.23 & 1.59\\
+			&                                                         & $\sigma$ & 4.760e-03 & 0.0321 & 0.0676 & 0.0413 & 0.0745 & 0.0479 & 0.0702 & 0.0943 \\
+			\hline
+		\end{tabular}
+	\end{adjustbox}
+	\label{tab:full_comparison_table}
+	\caption{Tabla completa de resultados}
+\end{table}
+
+
+
+
+
+
+
 \chapter{Ecuaciones}
-\section*{Features entrenamiento 1 del clasificador}
+\section{Features Clasificador}
 \begin{multicols}{2}
-	
-	
+	\label{eq:all_features}
 	\begin{equation}
 		F_1\left(i\right)   = \frac{P_i}{W}
 		\label{feature:1}
@@ -773,35 +1073,14 @@ Se realizaró un analisis comparativo entre las heuristicas implementadas por \c
 	\end{equation}
 	
 	\begin{equation}
-		F_5\left(i\right)   = \text{CSol}_i
+		F_5\left(i\right)   = \text{ContSol}_i
 		\label{feature:5}
 	\end{equation}
 	
 	\begin{equation}
-		F_6\left(i\right)   = \frac{\#\{A\in S,i \in A \}}{\#S}
+		F_6\left(i\right)   = \text{Random}\left(i\right)
 		\label{feature:6}
 	\end{equation}
-	
-	\begin{equation}
-		F_7\left(i\right)   = \frac{\#\{A\in S,i \in A: PS_A > 0 \}}{W}
-		\label{feature:7}
-	\end{equation}
-	
-	\begin{equation}
-		F_8\left(i\right)   = \frac{\#\{A\in S,i \in A: PS_A < 0 \}}{W}
-		\label{feature:8}
-	\end{equation}
-	
-	\begin{equation}
-		F_9\left(i\right)   = \frac{\sum^S_{A: i\in A} PS_{A}}{\sum^S_{A} PS_A}
-		\label{feature:9}
-	\end{equation}
-	
-	\begin{equation}
-		F_10\left(i\right)   = \text{Random}\left(i\right)
-		\label{feature:10}
-	\end{equation}
-	
 \end{multicols}
 
 \clearpage
