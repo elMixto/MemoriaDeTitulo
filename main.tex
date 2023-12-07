@@ -168,6 +168,7 @@
 %--------------------------------------------------------------------------------------------------------------------------
 % ------------------------------------------ Aquí empieza el documento ----------------------------------------------------
 %--------------------------------------------------------------------------------------------------------------------------
+\renewcommand{\max}{\operatorname{Maximizar}}
 
 \usepackage{tikz}
 \begin{document}
@@ -356,7 +357,7 @@ Implementar una heurística basada en machine learning para resolver el PRKP.
 
 \section{Estructura del documento}
 
-El documento consta de 6 capítulos, en los cuales se discutirá, el modelo matemático representando el problema (2), la metodología propuesta para resolverlo (3), un análisis comparativo de los resultados experimentales (4), y finalmente una revisión y discusión para concluir el documento.
+El documento consta de 6 capítulos, en los cuales se discutirá, el modelo matemático representando el problema (2), la metodología propuesta para resolverlo (3), un análisis comparativo de los resultados experimentales (4), y finalmente una revisión y discusión para concluir el documento. (5).
 
 \clearpage
 
@@ -416,84 +417,102 @@ Este capítulo comprende la definición formal del problema junto al modelo mate
     \section{Modelo matemático}
     
     
-    En la formulación de \cite{baldo_polynomial_2023} se describe la formulación del PRKP y realiza una linealización para transformar el modelo de programación no lineal a un problema de programación lineal (PL) compatible con solvers adecuados como Gurobi o Cplex. Para efectos de esta memoria, no es necesario usar la linealización del problema y se referirá a la primera formulación de baldo y se reservará su linealización para uso exclusivo como modelo de PL.
+    \cite{baldo_polynomial_2023} describe la formulación del modelo matemático linealizado del PRKP compatible con solvers exactos de programación lineal. El modelo se describe a continuación.
     
-    La formulación consiste en un conjunto elementos o alternativas que poseen un beneficio, un costo nominal y un costo máximo asociados, definidos como:
-    
-    \begin{itemize}
+    \subsection{Parametros}
+     \begin{itemize}
     	\item $I$, El conjunto de elementos posibles, de cardinalidad $N$
     	\item $P_i$, El beneficio asociado al elemento $i$ %P es de profit
     	\item $LC_i$, El coste nominal del elemento $i$    %Lower Cost
     	\item $UC_i$, El coste máximo del elemento $i$     %Upper Cost
     	\item $W$, El presupuesto o coste máximo asociado al problema.
     	\item $S$, El conjunto de sinergias polinomiales.
+    	\item $PS_A$, El beneficio de la sinergia $A$
+    	\item $\Gamma$, El número máximo de elementos que pueden variar de su costo base.
+    	
+    	
     \end{itemize}
     
-    Así, nuestra variable de decisión es el vector binario definido en \ref{equ:x_def}
-    
+ 	\subsection{Variables de decision:}
+
     \begin{equation}
     	\label{equ:x_def}
     	x_i = \left\{ 
     	\begin{array}{lc}
-    		1 & \text{si el elemento $i$ es elegido}\\ \\ 
-    		0 &  \text{si el elemento $i$ no es elegido}
+    		1 & \text{si  $i\in X$}\\ \\ 
+    		0 &  \text{si $i \notin X$}
     	\end{array} \right.
     \end{equation}
     
-    Ahora bien, dada una solución x, algunos elementos elegidos pueden variar en sus costes, con valores entre $LC_i$ y $UP_i$. El máximo número de elementos que puede variar su coste dada una solución se describe por el parámetro $\Gamma$.
+    \begin{equation}
+    	\label{equ:z_def}
+    	\mathcal{Z}_A = \left\{ 
+    	\begin{array}{lc}
+    		1 & \text{si  $i\in A,  \forall i \in X$}\\
+    		0 &  \text{si $\exists i\in A: i \notin X$}
+    	\end{array} \right.
+    \end{equation}
+
     
-    Las soluciones robustas encontradas deben tener la propiedad, de que para cualquier combinación posible de costos obtenidos entre LC y UC, no debe superarse el presupuesto. Para esto se asume el peor de los casos para las variaciones, es decir, donde todos los costes que varían son elementos de la solución y además se eligen los $\Gamma$ elementos con mayor variación entre coste nominal y máximo y se varían.
+    \begin{equation}
+    	\label{equ:pi_def}
+    	\rho,\pi_i \in \mathbb{R}^+
+    \end{equation}
     
-    De esta forma se define la variación de costo de un elemento $i$ como:
     
-    $$
-    \Delta C_i  = UC_i - LC_i
-    $$
-    
-    Y la restricción de presupuesto, como:
+	\subsection{Función objetivo}
+	
+	
+	\begin{equation}
+		\label{eq:of}
+		\text{Maximizar} \sum_i^I{P_ix_i} + \sum_{A\in S} PS_A\cdot \mathcal{Z}_A -
+		\sum_i^I {LC_{i}x_i} - \left(\Gamma\rho+\sum_i^I \pi_i\right)
+	\end{equation}
+
+    \subsection{Restricciones}
     
     \begin{equation}
    		\label{eq:costs}
-    	\left( \sum_{i=1}^I LC_i\cdot x_i\right)  + \max \left( \sum_{i=1}^I \Delta C_i\cdot y_i \right) \leq W
+  		\sum_{i}^{I}{LC_ix_i} + \Gamma\rho+\sum_i^I \pi_i \leq W
     \end{equation}
-    
-    Donde la variable auxiliar $y_i$ describe si el elemento $x_i$ varía o no, lo que por la formulación está sujeto a:
-    
-    $$
-    \sum_{i=1}^I y_i \leq \Gamma
-    $$
-    
-    \subsubsection{Sinergias polinomiales}
-    Las sinergias polinomiales corresponden a beneficios asociados a combinaciones específicas de elementos elegidos para una solución.
-    
-    Cada sinergia $A \subseteq I$ tiene entonces asociado un beneficio $PS_A$ (Profit Sinergy), y este beneficio se suma, solo si cada elemento de la sinergia está presente en la solución. Los beneficios totales obtenidos por las sinergias se muestran en \ref{total_sinergies_profit} y se entiende de forma comprensiva que, si todos los elementos $i$ en $A$ tienen un $x_i$ con un valor de 1 entonces se suma el beneficio, pero si uno de los elementos no está en la solución, es decir $x_i = 0$, entonces toda la productoria es cero y el beneficio agregado por la sinergia es cero.
     
     \begin{equation}
-    	\label{total_sinergies_profit}
-    	\sum_{A \in S}\left( PS_A \cdot \prod_{i \in A} x_i \right)
+    	\label{eq:cost_relax}
+    	\rho + \pi_i \geq \left(UC_i - LC_i\right)\cdot x_i 
+    	\hspace{1cm}
+    	 \forall i \in I
     \end{equation}
-    
-    
-    \subsubsection{Función objetivo}
-    Dados los parámetros anteriores, se define la función objetivo \ref{objective_function}
-    
-    \begin{center}
-    	\begin{equation}
-    		\max f(x) = \sum_{i=1}^I p_i\cdot x_i + 
-    		\sum_{A \in S}\left( PS_A \cdot \prod_{i \in A} x_i \right)
-    		- \left( \sum_{i=1}^I LC_i\cdot x_i  + \max  \sum_{i=1}^I \Delta C_i\cdot y_i \right)
-    		\label{eq:objective_function}
-    	\end{equation}
-    \end{center}
-    
-    
-    Sujeto a la restricción de presupuesto
     
     \begin{equation}
-    	\sum_{i=1}^I LC_i\cdot x_i  + \max \sum_{i=1}^I \Delta C_i\cdot y_i \leq W        
+    	\label{eq:fijar_z}
+    	\sum_{i\in A} x_i \leq |A| - 1 + Z_{A} \hspace{1cm} \forall A \in S:PS_A < 0
+    \end{equation}
+   
+    \begin{equation}
+    	\label{eq:fijar_z_2}
+    	Z_{A} \leq x_i \hspace{1cm} \forall i \in A \in S: PS_A > 0
     \end{equation}
     
-\clearpage
+    \begin{equation}
+    	x_i \in {0,1},
+    	\forall i \in I,
+    	\hspace{0.5cm}
+    	Z_{A} \in \{0,1\} \forall A \in S    	
+    \end{equation}
+    
+    \begin{equation}
+    	\rho \geq 0, 
+    	\hspace{0.5cm}
+ 		\pi_i \geq 0 \forall i \in I
+    \end{equation}
+    
+    
+    La función objetivo en la ecuación \ref{eq:of} representa el beneficio de los beneficios y sinergias de los elementos restando el coste máximo posible que estos puedan tener.
+    
+    La restricción de presupuesto se define con las ecuaciones \ref{eq:costs} y \ref{eq:cost_relax}, en principio $X$ debe ser robusto a las variaciones en los costes por lo que se usa un acercamiento que asume el peor de los casos, es decir el cálculo del coste será siempre maximizado según las posibles variaciones. En este contexto para linealizar el problema \cite{baldo_polynomial_2023} define las variables de decisión auxiliares \ref{equ:pi_def}, que transforman el coste máximo a un problema de minimizacion.
+    
+    Para fijar la variable auxiliar $\mathcal{Z_A}$ se especifican las restricciones \ref{eq:fijar_z} y \ref{eq:fijar_z_2}, que favorece las sinergias con beneficio positivo y desfavorece las con beneficio negativo.
+  
 \section{Revisión de literatura}
 
 
@@ -512,97 +531,47 @@ Si bien estos trabajos no se relacionan directamente con la variante del problem
 
 \chapter{Metodología}
 
+En este capitulo se expondrá el algoritmo propuesto para resolver el PKRP, así como las definiciones del modelo machine learning que actúa como clasificador, las características de los ítems que se usarán y el proceso de reducción de instancias.
+
 \section{Algoritmo propuesto}
 
-Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa de un pequeño nivel de confianza sobre la solución final obtenida. El algoritmo usa una red neuronal como clasificador que con base en ciertas características de cada elemento, decide su probabilidad deba estar o no en la solución final, estas predicciones se usan para asumir ceros en la solución y reducir la instancia original a una más pequeña mediante una transformación, este proceso se puede realizar un número arbitrario de veces, mientras el clasificador mantenga una alta confianza, una vez se cumplan ciertas condiciones, se detiene el algoritmo y se resuelve la instancia final reducida para obtener la solución al problema.
+Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa de un pequeño nivel de confianza sobre la solución final obtenida. El algoritmo usa una red neuronal como clasificador. Que con base en ciertas características de cada elemento, decide la probabilidad de estar o no en la solución final. Estas predicciones se usan para asumir ceros en la solución y reducir la instancia original a una más pequeña mediante una transformación. Este proceso puede ejecutarse un número arbitrario de veces, mientras se mantenga la precisión del modelo, al predecir instancias con cada vez menos elementos.
 
 \begin{algorithm}[H]
 	\caption{Algoritmo general}\label{alg:general}
-	\begin{algorithmic}
-		\State $IToFixHistory$ 			\Comment{Elementos que han sido fijados como cero}
-		\State $OInstance$ 				\Comment{Instancia original a resolver}
-		\State $threshold$  			\Comment{Mínimo nivel de confianza tolerado}
-		\State $Instance \gets OInstance$
+	\begin{algorithmic}[1]
+		\State $\tau$ \label{alg1:def_tau} \Comment{Umbral de confianza del clasificador}
+		\State $I$ \label{alg1:I} \Comment{Conjunto de elementos inicial}
+		\State $S$ \label{alg1:sinergias} \Comment{Conjunto de sinergias}
 		\Loop
-			\State $F \gets features$ \Comment{Vector de features del elemento $i$}
-			\State $\tilde{x} \gets Classifier(F)$ \Comment{Predicción del clasificador}
-			\State $IToFix \gets GetIToFix(\tilde{x})$ \Comment{Se obtienen los ítems para fijar como ceros }
-			\State $ItoFixHistory \gets IToFix$
-			\State $Instance \gets Reduce(Instance,IToFix)$ \Comment{Instancia reducida}
-			\If{$ ItoFix == 0$ \textbf{or} $\min(\tilde{x}) <$ threshold }
-				\State $\textbf{break}$ \Comment{Si el clasificador no encuentra más elementos que fijar o la predicción tiene mala confianza se detiene el algoritmo}
-			\EndIf
-		\State $y \gets ExactSolver(Instance)$ \Comment{Solución óptima para la instancia}
+		\State $\mu \gets \frac{|I|}{\log_{10}{|I|}}$ \label{alg1:def_mu} \Comment{Maximo numero de elementos a bloquear por paso}
+		\State $F \gets$ Características \label{alg1:full_features} \Comment{Cálculo de características de los elementos}
+		\State $\tilde{x} \gets$ Clasificador($F$) \label{alg1:get_pred} \Comment{Generación de predicciones continuas}
+		\State $Z \subset I \gets$ Z($\tilde{x},\tau,\mu$) \label{alg1:get_Z} \Comment{Selección de elementos para eliminar}
+		\If{$ |Z| == 0$ \textbf{or} $\min(\tilde{x}) > \tau$} \label{alg1:break_condition}
+		\State \textbf{break}
+		\EndIf
+		\State $I \gets I-Z$ \Comment{Reducción de la instancia} \label{alg1:update_I}
+		\State $S \gets S - \{A \in S, \exists i \in A: i \in Z\}$ \Comment{Actualización de sinergias}
 		\EndLoop
+		\State $X \gets$ SolverExacto($I$) \label{alg1:exact_solver} \Comment{Resolución exacta del conjunto reducido}
 	\end{algorithmic}
 \end{algorithm}
 
-Los puntos claves a definir del algoritmo general \ref{alg:general} son la reducción de las instancias, y el funcionamiento del clasificador, y en menor medida el cómo interpretar la predicción para fijar valores.
+El algoritmo \ref{alg:general} inicia con la definición del umbral de confianza del clasificador $\tau$ en la línea \ref{alg1:def_tau}. Se establece el conjunto inicial de elementos $I$ en la línea \ref{alg1:I}, y el conjunto de sinergias $S$ en la línea \ref{alg1:sinergias}.
 
+El bucle principal comienza calculando las características de los elementos en la línea \ref{alg1:full_features}. Posteriormente, el clasificador genera predicciones $\tilde{x}$ en la línea \ref{alg1:get_pred} que se encuentran en el rango $[0,1]$. A continuación, se selecciona un conjunto de elementos $Z$ para eliminar en la línea \ref{alg1:get_Z} en función de las predicciones y el umbral $\tau$.
 
+El tamaño maximo de $Z$ se define por $\mu$ en funcion del numero de elementos que existe en la instancia reducida, como se muestra en la linea \ref{alg1:def_mu}.
 
+El bucle continúa hasta que el conjunto $Z$ está vacío o el valor mínimo de las predicciones $\tilde{x}$ supera el umbral $\tau$, como se verifica en la línea \ref{alg1:break_condition}. Durante cada iteración, se eliminan los elementos de $Z$ de $I$ y se descartan todas las sinergias que incluyan algun elemento de $Z$.
 
+Finalmente, el algoritmo resuelve exactamente el conjunto reducido $I$ utilizando el \textit{solver} exacto en la línea \ref{alg1:exact_solver}, y el resultado se almacena en $X$.
 
-\section{Reducción de instancias}
-
-Se puede reducir la complejidad de una instancia asumiendo la presencia de un elemento en la solución óptima, es decir , para un $i \in I$ se puede fijar $x_i=0$ o $x_i = 1$, para reducir el espacio de búsqueda. Sin embargo, la formulación del problema, en específico \ref{eq:costs}, muestra que para calcular la restricción de presupuesto, y \ref{eq:objective_function} la función objetivo, es necesario resolver un subproblema de optimización, que debe considerar todos los elementos de la instancia original, que estarán presentes en la solución final, debido a esto, para reducir instancias, solo es posible definir $x_i=0$ para un $i$ que se quiera declarar. Así, sea $Z$ el conjunto de elementos que se quiere fijar como cero, es posible aplicar una transformación a los parámetros del problema, para generar una instancia de menor complejidad.
-	
-\begin{itemize}
-	\item $I' = I - Z$
-	\item $S' = S - \{A \in S, \exists i \in A: i \in Z\} $
-\end{itemize}
-
-De forma comprensiva, ya no es necesario considerar los elementos de Z en la solución, pero más importante,
-todas las sinergias polinomiales que poseían elementos en Z, ya no son alcanzables por ninguna solución, por lo que es seguro eliminarlas de $S$, notar también que $\Gamma$ no es modificado.
-
-Al aplicar esta transformación de forma iterativa es posible asumir ciertas propiedades:
-
-
-\begin{itemize}
-\item En cada paso, la solución óptima de cada iteración de la instancia estará compuesta por una proporción mayor de unos que de ceros. La proporción se le llamará, la densidad $D$ de la instancia .
-
-\item  Como $\Gamma$ no cambia al eliminar ceros, es posible que se de la situacion en que $\Gamma > N$, en cuyo caso el problema pasa de ser un PRKP a PKP, puesto que para asegurar la robustes, solo es necesario considerar los costes altos de la solucion.
-
-\item  Existe un punto en el que ya no quedan ceros que eliminar, el cual sucede cuando \ref{eq:costs} se cumple para un $x_i$ compuesto solo de unos, lo que es posible calcular a medida que se ejecuta la iteración.
-\end{itemize}
-
-
-Se define $Z$ con base en la predicción del clasificador, si $\tilde{x} = Clasificador(I)$, la prediccion continua del clasificador puede ser interpretada como un vector de probabilidades, donde valores cercanos a cero son interpretados como que el clasificador predice para ese extremo y equivalente para el las predicciones cercanas a uno.
-
-Se definen entonces dos parametros para generar Z, $\tau$ y $\mu$:
-
-\begin{itemize}
-	\item $\tau$ Corresponde al $threshold$, representa la confianza mínima necesaria, para decidir incluir un ítem en Z
-	\item $\mu$ Es el número máximo de elementos que incluir en Z.
-\end{itemize}
-
-A base de estos parámetros, el algoritmo \ref{alg:z} construye Z
-
-\begin{algorithm}[H]
-	\caption{$Z(\tilde{x},\tau,\mu)$}\label{alg:z}
-	\begin{algorithmic}
-		\State $A \gets \{ i \in I: x_i \leq \tau \}$
-		\State $A \gets Sort(A)$  \Comment{Ordenar de forma ascendente en base a los valores de $x_i$}
-		\State $Z \gets \{\}$	  
-		\State $count \gets 0$
-		\ForAll{$i \in A$}		  \Comment{Agregar los $\mu$ items con menor $x_i$}
-			\State $Z \gets i$
-			\State $count \gets count + 1$
-			\If{$count == \mu$}
-				\State \textbf{break}
-			\EndIf
-		\EndFor
-		\State Z
-	\end{algorithmic}
-\end{algorithm}
-
-El threshold $\tau$ se establece por el usuario para definir la precision y velocidad de ejecucion del algoritmo y pertenece al rango de valores $[0,0.5]$.
-
-El número máximo de elementos que bloquear en cada paso $Z$ se ha definido como $Z = \max\{\frac{N}{\log_{10}{N}},100\}$ para cada instancia que se genera por reducción.
 
 \section{Clasificador}
 
-El clasificador utilizado es una red neuronal de cinco capas que como entrada usa features calculadas para un elemento de la instancia con las que genera una predicción sobre si el elemento tendrá un valor de cero o uno en la solución final.
+El clasificador utilizado es una red neuronal de cinco capas. Para la entrada usa features calculadas para un elemento de la instancia, asi, se genera una predicción sobre si el elemento tendrá un valor de cero o uno en la solución final.
 
 
 \begin{figure}[H]
@@ -657,29 +626,24 @@ El clasificador utilizado es una red neuronal de cinco capas que como entrada us
 	\label{fig:network}
 \end{figure}
 
-
-Como se muestra en la figura \ref{fig:network}, la red no intenta predecir el valor del $x_i$ optimo directamente, sino que predice la transformación \ref{eq:soltransformation}, que es más adecuada para la red, usando la función de activación tangente hiperbólica para encasillar la salida al rango $[-1,1]$.
-De esta forma, la salida de la red se reconstruye como  $\tilde{x_i} = y^{-1}(\tilde{y}(i))$
-
 \begin{equation}
-	y(i) = \begin{cases}
-		1, & \text{si } x_i = 1 \\
-		-1,  & \text{si } x_i = 0
-		
-	\end{cases}
+	\tilde{x}(i) = \frac{1}{2}\left( \tilde{y}(i) + 1 \right)
 	\label{eq:soltransformation}	
 \end{equation}
 
-La entrada de la red es un vector que contiene todas las features del elemento $i$:
+Como se muestra en la Figura la entrada de la red es un vector que contiene todas las features del elemento $i$:
 $$
-	f(i) = \textbf{(}f_1(i),f_2(i), \hdots f_\phi(i))\textbf{)}
+f(i) = \textbf{(}f_1(i),f_2(i), \hdots f_\phi(i))\textbf{)}
 $$
-donde $\phi$ es del número de features
+donde $\phi$ es del número de features.
 
-En base a esto es util definir la matriz de features $\times$ items como:
+Através de la función de activación tangente hiperbólica, la red genera un una salida $\tilde{y}$ que se encuentra en el rango [-1,1], la que es posible reconstruir usando la transformacion de la ecuacion \ref{eq:soltransformation}. 
+
+
+En base a esto es útil definir la matriz $F_{\phi \times N}$ como en la ecuacion \ref{eq:feature_matrix}:
 
 \begin{equation}
-F(I) = 
+F_{\phi \times N}(I) = 
 \left( 
 \begin{matrix}
 	f(1)\\
@@ -689,78 +653,99 @@ F(I) =
 	f(N)\\
 \end{matrix}
 \right)
+\label{eq:feature_matrix}
 \end{equation}
 
 
-Así, la red es una función definida como
-\paragraph*{Preduccion para item:}
+Así, la red es una función definida como:
+\paragraph*{Predicción para ítem:}
 $$
-	Net(f) = \tilde{x_i}: f\in [0,1]^n \rightarrow x_i \in[0,1]
-$$
-
-\paragraph*{Prediccion para todos los items de una instancia:}
-
-$$
-	Net(F) = \tilde{x}: F\in [0,1]^{n\times N} \rightarrow x \in[0,1]^{N}
+	Net(f) = \tilde{x_i}: f\in [0,1]^\phi \rightarrow \tilde{x}_i \in[0,1]
 $$
 
-Las features que se utilizaran, codifican $P_i$, $LC_i$,$UC_i$, $ContSol_i$ , $\Gamma$, $Noise$, Las definiciones se encuentran en el anexo \ref{eq:all_features}.
+\paragraph*{Predicción para todos los ítems de una instancia:}
+
+$$
+	Net(F) = \tilde{x}: F\in [0,1]^{\phi\times N} \rightarrow x \in[0,1]^{N}
+$$
+
+Las features que se utilizan, codifican los parámetros $P_i$, $LC_i$,$UC_i$, $\Gamma$, además de, $ContSol_i$,$Noise$. Las definiciones se encuentran en el anexo \ref{eq:all_features}.
 
 Entre estas:
 \begin{itemize}
-	\item $ContSol_i$ se refiere a la solución de la relajación continua del problema en que la variable de decisión $x_i$ es continua.
-	\item Noise es un generador de números aleatorios, que se usa para definir nodos vacíos extra para la red neuronal, esto da lugar para reemplazar esta feature por otra asociada al estado del algoritmo general.
+	\item $ContSol_i$ se refiere a la solución de la relajación continua del PRKP en que la variable de decisión $x_i$ es continua.
+	\item Noise es un generador de números aleatorios, que se usa para definir una entrada vacía en la red neuronal, esto da lugar para reemplazar esta feature por otra asociada al estado del algoritmo general.
 \end{itemize}
 
 
 \subsection{Entrenamiento}
 
-Se realizarán dos etapas de entrenamiento sobre un conjunto de instancias, la primera etapa consiste en entrenar la red para predecir la solución óptima de cada instancia, y así crear un clasificador general, en la segunda etapa la red se afina con instancias generadas desde el algoritmo iterativo de reducción. Además , los datos con los que se entrenará la red serán generados por un solver exacto que calcula $x$, óptimo para cada instancia. 
+Se realizan dos etapas de entrenamiento sobre un conjunto de instancias. La primera etapa consiste en entrenar la red para predecir la solución óptima de cada instancia, y así crear un clasificador general. En la segunda etapa, la red se afina con instancias generadas desde el algoritmo iterativo de reducción. Además, las soluciones con las que se entrenará la red son generadas por un solver exacto que calcula óptimo para cada instancia. 
 
 \begin{algorithm}[H]
 	\caption{Primer entrenamiento}\label{alg:training}
-	\begin{algorithmic}
-		\State TrainingSet \Comment{Conjunto de instancias de entrenamiento}
-		\State Net 		   \Comment{Red neuronal}
-		\State Optimizer   \Comment{Optmizador para la red}
-		\State Solver      \Comment{Solver exacto para el problema}
-		\For{Instance $\in$ TrainingSet}
-			\State $x \gets Solver(Instance)$ \Comment{Vector booleano x con la solución óptima de la instancia}
-			\For{$i \in I$}
-				\State $\tilde{x_i} \gets Net(f(i))$  \Comment{Prediccion de la red de $x_i$ desde las features}
-				\State $loss \gets Loss(x_i,\tilde{x_i})$
-				\State $Net \gets Optimizer(Net,loss)$ \Comment{Un paso de optimización de la red}
-			\EndFor
-		\EndFor
-		\State $Net$ \Comment{Red entrenada}
+	\begin{algorithmic}[1]
+		\State TrainingSet \Comment{Conjunto de instancias de entrenamiento} \label{line:trainingset}
+		\State Net 		   \Comment{Red neuronal definida anteriormente} \label{line:net}
+		\State Optimizer   \Comment{Optimizador para la red} \label{line:optimizer}
+		\State Solver      \Comment{Solver exacto para el problema} \label{line:solver}
+		\State Loss      \Comment{Funcion de perdida} \label{line:loss}
+		
+		\For{Instance $\in$ TrainingSet} \label{line:startloop}
+		\State $I \gets Instance_I$ \label{line:i_from_instance}
+		\State $x \gets Solver(I)$ \Comment{Vector booleano $x$ con la solución óptima de la instancia} \label{line:solveinstance}
+		\For{$i \in I$} \label{line:startinnerloop}
+		\State $\tilde{x_i} \gets Net(f(i))$  \Comment{Predicción de la red de $x_i$ desde las features} \label{line:prediction}
+		\State $loss \gets Loss(x_i,\tilde{x_i})$ \label{line:calculateloss}
+		\State $Net \gets Optimizer(Net,loss)$ \Comment{Un paso de optimización de la red} \label{line:optimizationstep}
+		\EndFor \label{line:endinnerloop}
+		\EndFor \label{line:endloop}
+		\State $Net$ \Comment{Red entrenada} \label{line:trainednet}
 	\end{algorithmic}
 \end{algorithm}
 
-Notar que el algoritmo \ref{alg:training} realiza el proceso de optimización calculando la el gradiente y realizando el ajuste de la red por cada ítem de la instancia. Se usa la implementación de pytorch de Adam, algoritmo introducido por \cite{kingma2017adam} como alternativa para descenso de gradiente estocástico. Y se usa como función de perdida, simplemente la diferencia lineal entre los valores de entrenamiento, en este caso, entre la predicción y el valor óptimo de $x_i$.
+El algoritmo \ref{alg:training} de entrenamiento comienza designando un conjunto de instancias en la linea \ref{line:trainingset} cada una de las estas define el conjunto de parámetros del modelo de programación lineal. Se define la red que se usará en la linea \ref{line:net}, inicializándose con pesos aleatorios.En la linea \ref{line:loss} se declara la funcion de perdida, que corresponde a la diferencia lineal entre el valor predicho y el valor real.
+
+En la linea \ref{line:optimizer} se declara el optimizador encargado de reajustar los pesos de la red en cada paso de entrenamiento, se usa el algoritmo Adam introducido por \cite{kingma2017adam}, que funciona como alternativa al descenso de gradiente estocástico. Finalmente se declara el solver exacto a usar, Gurobi 10.0.3.
+
+A continuación, se inicia un bucle sobre cada instancia del conjunto de entrenamiento en la línea \ref{line:startloop}. Para cada instancia,
+se obtiene el conjunto de elementos asi como sus otros parametros, definiendo $I$ de la instancia, en la linea \ref{line:i_from_instance}.
+Se obtiene la solucion optima $x$ para la instancia usando el solver en la línea \ref{line:solveinstance}.
+
+
+Posteriormente, se inicia un bucle interno sobre los elementos de la instancia en la línea \ref{line:startinnerloop}. Dentro de este bucle, la red neuronal realiza predicciones $\tilde{x_i}$ sobre las características de la instancia utilizando la función \(f(i)\) en la línea \ref{line:prediction}. Se calcula la perdida entre la predicción y la solución óptima en la línea \ref{line:calculateloss}, y la red se actualiza mediante un paso de optimización utilizando Adam en la línea \ref{line:optimizationstep}.
+
+Este proceso de predicción, cálculo de pérdida y optimización se repite para todos los índices en el bucle interno. Una vez completado, se regresa al bucle externo para la siguiente instancia del conjunto de entrenamiento.
+
+Después de que se han procesado todas las instancias del conjunto de entrenamiento, la red neuronal $Net$ se considera entrenada y se devuelve como resultado del algoritmo en la línea \ref{line:trainednet}.
+
+
 
 
 \begin{algorithm}[H]
 	\caption{Segundo entrenamiento}\label{alg:tunning}
-	\begin{algorithmic}
+	\begin{algorithmic}[1]
+		\State $\tau$ \label{alg1:def_tau_2} \Comment{Umbral de confianza del clasificador}
 		\State TrainingSet \Comment{Conjunto de instancias de entrenamiento}
 		\State Net \Comment{Red neuronal pre-entrenada}
 		\State Optimizer \Comment{Optmizador para la red}
-		\For{OInstance $\in$ TrainingSet}
-				\State $ZHistory$
-				\State $Instance \gets OInstance$
-				\Loop
-					\State $\tilde{x} \gets Net(F(I))$  \Comment{Vector de predicción de la red}
-					\State $ZHistory \gets Z(\tilde{x},\tau,\mu)$
-					\State $Instance \gets Reduce(Instance,Z(\tilde{x},\tau,\mu))$ \Comment{Reducir la instancia}
-					\If{$ \#Z == 0$ \textbf{or} $\min(\tilde{x}) \leq \tau$ }
+		\State Loss \Comment{Función de perdida}\label{line:alg2:loss}
+		\For{Instance $\in$ TrainingSet}
+				\State $I \gets Instance_I $
+				\Loop \Comment{Bucle de reducción}
+				\State $\mu \gets \frac{|I|}{\log_{10}{|I|}}$ \label{alg2:def_mu} \Comment{Maximo numero de elementos a bloquear por ciclo}
+					\State $\tilde{x} \gets Net(F(I))$  \Comment{Vector de predicción de la red} \label{line:alg2:initial_pred}
+					\State $Z \subset I \gets Z(\tilde{x},\tau,\mu)$ \label{start_reduction_alg}
+					\If{$ |Z| == 0$ \textbf{or} $\min(\tilde{x}) > \tau$ }
 						\State $\textbf{break}$ 
 					\EndIf
-				\State $x \gets Solver(Instance)$  \Comment{Solución óptima de la instancia reducida}
-				\State $\tilde{x} \gets Net(F(I))$ \Comment{Predigo para la instancia reducida}
+					\State $I \gets I-Z$ \Comment{Reducción de la instancia} \label{alg1:update_I_2}
+					\State $S \gets S - \{A \in S, \exists i \in A: i \in Z\}$ \Comment{Actualización de sinergias} \label{end_reduction_alg}
+				\State $x \gets Solver(I)$  \Comment{Solución óptima de la instancia reducida} \label{solve_smaller}
+				\State $\tilde{x} \gets Net(F(I))$ \Comment{Prediccion para la instancia reducida} \label{pred_smaller}
 			\For{$i \in I$}
-				\State $\tilde{x}_i \gets Net(f(i))$  
-				\State $loss \gets Loss(x_i,\tilde{x_i})$
-				\State $Net \gets Optimizer(Net,loss)$
+				\State $loss \gets Loss(x_i,\tilde{x_i})$     \Comment{Cálculo de la perdida} \label{smaller_loss}
+				\State $Net \gets Optimizer(Net,loss)$		  \Comment{Actualización de los pesos de la red} \label{smaller_optim}
 			\EndFor
 			\EndLoop
 		\EndFor
@@ -768,25 +753,83 @@ Notar que el algoritmo \ref{alg:training} realiza el proceso de optimización ca
 	\end{algorithmic}
 \end{algorithm}
 
-El segundo entrenamiento sigue la estructura del algoritmo general \ref{alg:general}, para así resolver instancias que son generadas por la reducción. La feature \ref{feature:6} que representa un numero aleatorio es reemplazada por $\frac{N_{\text{InstanciaActual}}}{N_{\text{InstanciaOriginal}}}$ para codificar un nivel de progesión en la red.
+El segundo proceso de entrenamiento descrito en el algoritmo \ref{alg:tunning} sigue la estrategia del algoritmo general \ref{alg:general}. Inicialmente se declaran los parámetros $\tau$ y $\mu$, asi como el conjunto de instancias de entrenamiento, la red neuronal pre-entrenada, el optimizador y la función de perdida, en las lineas \ref{alg1:def_tau_2} a \ref{line:alg2:loss}. Se ejecuta el bucle de reducción por cada instancia, usando red la predicción en la linea \ref{line:alg2:initial_pred}. Al igual que en el algorimo general \ref{alg:general} , se usa esta predicción, para generar una instancia reducida, este proceso ocurre en las líneas \ref{start_reduction_alg} a \ref{end_reduction_alg}. Luego se calcula la solución óptima para la instancia reducida, en la linea \ref{solve_smaller}, asi como la predicción de la red en la línea \ref{pred_smaller}. Finalmente, se realiza un paso de optimización por cada elemento en la instancia reducida donde se calcula la perdida entre la predicción y el valor óptimo en la linea \ref{smaller_loss} y se ajustan los pesos de la red en la línea \ref{smaller_optim}.
+Después de ejecutar este proceso por todas las instancias del conjunto de entrenamiento, y actualizar los pesos usando todos los pasos de reducción de las instancias, se obtiene la red entrenada final.
 
+Un cambio que mejora el precisión de la red resolver instancias reducidas, es reemplazar la feature \ref{feature:6} que correspondía un valor aleatorio, por una metrica que representa cuanto se ha reducido la instancia desde su tamaño original. Por esto en las ocaciones que se calcula $F(I)$ para el segundo entrenamiento, $f_6$ es reemplazada por la feature de la ecuacion \ref{feature:7}, donde la instancia actual se refiere $|I|$ de cada ciclo del bucle de reduccion.
+
+\begin{equation}
+	\label{feature:7}
+	f_7(i) = \frac{\text{N instancia Original}}{\text{N instancia actual}}
+\end{equation}
+
+
+
+
+ \section{Reducción de instancias}
+ 
+ De forma comprensiva, ya no es necesario considerar los elementos de Z en la solución, pero más importante,
+ todas las sinergias polinomiales que poseían elementos en Z, ya no son alcanzables por ninguna solución, por lo que es seguro eliminarlas de $S$, notar también que $\Gamma$ no es modificado.
+ 
+ Al aplicar esta transformación de forma iterativa es posible asumir ciertas propiedades:
+ 
+ 
+ \begin{itemize}
+ 	\item En cada paso, la solución óptima de cada iteración de la instancia estará compuesta por una proporción mayor de unos que de ceros. La proporción se le llamará, la densidad $D$ de la instancia .
+ 	
+ 	\item  Como $\Gamma$ no cambia al eliminar ceros, es posible que se de la situacion en que $\Gamma > N$, en cuyo caso el problema pasa de ser un PRKP a PKP, puesto que para asegurar la robustes, solo es necesario considerar los costes altos de la solucion.
+ 	
+ 	\item  Existe un punto en el que ya no quedan ceros que eliminar, el cual sucede cuando \ref{eq:costs} se cumple para un $x_i$ compuesto solo de unos, lo que es posible calcular a medida que se ejecuta la iteración.
+ \end{itemize}
+ 
+ 
+ Se define $Z$ con base en la predicción del clasificador, si $\tilde{x} = Clasificador(I)$, la prediccion continua del clasificador puede ser interpretada como un vector de probabilidades, donde valores cercanos a cero son interpretados como que el clasificador predice para ese extremo y equivalente para el las predicciones cercanas a uno.
+ 
+ Se definen entonces dos parametros para generar Z, $\tau$ y $\mu$:
+ 
+ \begin{itemize}
+ 	\item $\tau$ Corresponde al $threshold$, representa la confianza mínima necesaria, para decidir incluir un ítem en Z
+ 	\item $\mu$ Es el número máximo de elementos que incluir en Z.
+ \end{itemize}
+ 
+ A base de estos parámetros, el algoritmo \ref{alg:z} construye Z
+ 
+ \begin{algorithm}[H]
+ 	\caption{$Z(\tilde{x},\tau,\mu)$}\label{alg:z}
+ 	\begin{algorithmic}
+ 		\State $A \gets \{ i \in I: x_i \leq \tau \}$
+ 		\State $A \gets Sort(A)$  \Comment{Ordenar de forma ascendente en base a los valores de $x_i$}
+ 		\State $Z \gets \{\}$	  
+ 		\State $count \gets 0$
+ 		\ForAll{$i \in A$}		  \Comment{Agregar los $\mu$ items con menor $x_i$}
+ 		\State $Z \gets i$
+ 		\State $count \gets count + 1$
+ 		\If{$count == \mu$}
+ 		\State \textbf{break}
+ 		\EndIf
+ 		\EndFor
+ 		\State Z
+ 	\end{algorithmic}
+ \end{algorithm}
+ 
+ El threshold $\tau$ se establece por el usuario para definir la precision y velocidad de ejecucion del algoritmo y pertenece al rango de valores $[0,0.5]$.
+ 
+ El número máximo de elementos que bloquear en cada paso $Z$ se ha definido como $Z = \max\{\frac{N}{\log_{10}{N}},100\}$ para cada instancia que se genera por reducción.
+ 
  
 \clearpage
 \chapter{Resultados Experimentales}
-En este capitulo se presentará la comparación cuantitativa de resultados, se recontextualizarán los métodos de \cite{baldo_polynomial_2023} con base en las diferencias de hardware, así como también
+En este capitulo se presentará la comparación cuantitativa de resultados, se recontextualizarán los métodos de \cite{baldo_polynomial_2023} con base en las diferencias de hardware y se mostrará la evaluación del algoritmo propuesto.
 
 \section{Instancias}
 
-Las instancias reales que se resolverán provienen de un generador de instancias implementado por \cite{baldo_polynomial_2023} cuyas sinergias tienen en su mayoría beneficios de cero. Las instancias con $I$ mayor a mil, tienen una generación exponencial de sinergias, para $300 \le I \le 1000$, se usa una generación cuadrática de sinergias, mientras que para instancias con menos de 300 ítems, se agregan sinergias de forma lineal.
+Las instancias reales que se resuelven provienen de un generador de instancias implementado por \cite{baldo_polynomial_2023} cuyas sinergias tienen en su mayoría beneficios de cero. Las instancias con $I$ mayor a 1000, tienen una generación exponencial de sinergias. Para $300 \le I \le 1000$, se usa una generación cuadrática de sinergias. Para instancias con menos de 300 elementos, se generan sinergias de forma lineal.
 
 Para comparar el rendimiento del algoritmo propuesto con los solvers existentes propuestos por \cite{baldo_polynomial_2023}, se usará el mismo conjunto de instancias.
 
-El hardware utilizado para evaual las instancias consta de un proecesador Intel i7-8550U con 4 nucleos 8 hilos y 32GB ram en Linux 6.6.1.
-
-
 \section{Comparaciones}
 
-Los resultados completos  BaldoGA y BaldoML y la metodología aplicada por esta investigación. Como solver exacto se utilizó "Gurobi Optimizer version 11.0" y será la linea base para evaluar el rendimiento de los 3 métodos anteriores.
+Se calcularon los resultados para todas las instancias de \cite{baldo_polynomial_2023}, usando los métodos de BaldoGA y BaldoML, además de el algoritmo propuesto.
 
 \subsection*{Resultados generales}
 \subsubsection*{Comparacion de solver exacto con trabajo anterior}
@@ -796,22 +839,20 @@ En \ref{fig:solver_times} se muestran los tiempos para resolver instancias usand
 	\centering
 	\begin{subfigure}{.5\textwidth}
 		\includegraphics[width=1\linewidth]{graphs/baldo_solver_times.png}
-		\caption{Ejecucion Gurobi \cite{baldo_polynomial_2023}}
+		\caption{Ejecución Gurobi \cite{baldo_polynomial_2023}}
 	\end{subfigure}%
 	\begin{subfigure}{.5\textwidth}
 		\includegraphics[scale=0.656]{graphs/solver_times.png}
-		\caption{Ejecucion Gurobi }
+		\caption{Ejecución Gurobi actual}
 	\end{subfigure}%
-	\caption{Tiempos de ejecucion solver exacto}
+	\caption{Tiempos de ejecución solver exacto}
 	\label{fig:solver_times}
 \end{figure}
 
 \subsubsection*{Rendimiento normalizado}
-Se presenta en las figuras \ref{fig:full_gap} y \ref{fig:full_timegap} la comparación general de rendimiento de los métodos. En primer lugar BaldoGA tienen el comportamiento esperado desde los resultados de \cite{baldo_polynomial_2023}, con un $\bar{gap}$ de alrededor de un 
-%todo Calcular el gap medio de BaldoGA
-. por otro lado BaldoML tiene un gap promedio inferior al $1\%$ esto es debido a diferencias en la inicializacion del modelo randomforest al momento del entrenamiento, pero en mayor medida, por la diferencia de hardware, existe un subconjunto de instancias en las que el tiempo de ejecución del modelo, sumado al solver, superan el tiempo de ejecución del solver exacto, sobretodo al momento de calcular las features para la ejecucion, sobre las sinergias polinomiales.
+Se presenta en las figuras \ref{fig:full_gap} y \ref{fig:full_timegap} la comparación general de rendimiento de los métodos. En primer lugar BaldoGA tienen el comportamiento esperado desde los resultados de \cite{baldo_polynomial_2023}, con un $\bar{gap}$ de alrededor de un (Insertar valor aqui :D). Por otro lado BaldoML tiene un gap promedio inferior al (Insertar valor aqui :D) esto es debido a diferencias en la inicializacion del modelo randomforest al momento del entrenamiento, pero en mayor medida, por la diferencia de hardware, existe un subconjunto de instancias en las que el tiempo de ejecución del modelo, sumado al solver, superan el tiempo de ejecución del solver exacto, sobretodo al momento de calcular las features para la ejecucion sobre las sinergias polinomiales.
 
-Respecto a los tiempos de ejecucion, se puede notar que el algoritmo propuesto con un $\tau = 0.1$ genera resultados similares a BaldoGA mantiendo un 90\% de los tiempos de ejecución, menores a la media de los de BaldoGA. Ademas, BaldoML, a pesar de obtener resultados con un gap muy cercano a cero, sus tiempos de ejecución tienden a ser elevados y en la figura \ref{fig:full_timegap} se muestra visualmente que cerca de un 20\% de los tiempos de ejecución es superior al tiempo del solver exacto.
+Respecto a los tiempos de ejecución, se puede notar que el algoritmo propuesto con un $\tau = 0.1$ genera resultados similares a BaldoGA mantiendo un 90\% de los tiempos de ejecución, menores a la media de los de BaldoGA. Ademas, BaldoML, a pesar de obtener resultados con un gap muy cercano a cero, sus tiempos de ejecución tienden a ser elevados y en la figura \ref{fig:full_timegap} se muestra visualmente que cerca de un 20\% de los tiempos de ejecución es superior al tiempo del solver exacto.
 
 
 \begin{figure}[H]
@@ -824,13 +865,13 @@ Respecto a los tiempos de ejecucion, se puede notar que el algoritmo propuesto c
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.7]{graphs/full_timegap_comparison.png}
-	\caption{TimeGap de todos los metodos presentados}
+	\caption{TimeGap de los métodos usados}
 	\label{fig:full_timegap}
 \end{figure}
 
 
 
-El cuadro \ref{tab:comparison_table} es un extracto de la tabla completa de resultados \ref{tab:full_comparison_table}, que muestra BaldoML, BaldoGA y El algoritmo propuesto con un $\tau=0.25$. Es posible notar, que el algoritmo es menos preciso al encontrar soluciones de instancias relativamente pequeñas, pero se estabiliza con un gap promedio de alrededor de un 3\% para instancias de mayor tamaño.
+
 
 \begin{table}[h]
 
@@ -868,15 +909,12 @@ El cuadro \ref{tab:comparison_table} es un extracto de la tabla completa de resu
 		\label{tab:comparison_table}	
 \end{table}
 
+La tabla \ref{tab:comparison_table} es un extracto de la tabla completa de resultados \ref{tab:full_comparison_table}, que muestra BaldoML, BaldoGA y El algoritmo propuesto con un $\tau=0.25$. Es posible notar, que el algoritmo es menos preciso al encontrar soluciones de instancias de 100 elementos, pero se estabiliza con un gap promedio de alrededor de un 3\% para instancias de mayor tamaño. Siendo comparable a BaldoGA con tiempos de ejecución una orden de magnitud más pequeños.
 
 
 
-\chapter{Discusión}
+\chapter{Conclusiones}
     
-\clearpage
-
-
-\chapter{Conclusión}
     
 \clearpage
 
@@ -1038,8 +1076,8 @@ El cuadro \ref{tab:comparison_table} es un extracto de la tabla completa de resu
 			\hline
 		\end{tabular}
 	\end{adjustbox}
-	\label{tab:full_comparison_table}
-	\caption{Tabla completa de resultados}
+	
+	\caption{Tabla completa de resultados}\label{tab:full_comparison_table}
 \end{table}
 
 
@@ -1053,34 +1091,35 @@ El cuadro \ref{tab:comparison_table} es un extracto de la tabla completa de resu
 \begin{multicols}{2}
 	\label{eq:all_features}
 	\begin{equation}
-		F_1\left(i\right)   = \frac{P_i}{W}
+		f_1\left(i\right)   = \frac{P_i}{W}
 		\label{feature:1}
 	\end{equation}
 	
 	\begin{equation}
-		F_2\left(i\right)   = \frac{LC_i}{W}
+		f_2\left(i\right)   = \frac{LC_i}{W}
 		\label{feature:2}
 	\end{equation}
 	
 	\begin{equation}
-		F_3\left(i\right)   = \frac{UC_i}{W}
+		f_3\left(i\right)   = \frac{UC_i}{W}
 		\label{feature:3}
 	\end{equation}
 	
 	\begin{equation}
-		F_4\left(i\right)   = \frac{\Gamma}{N}
+		f_4\left(i\right)   = \frac{\Gamma}{N}
 		\label{feature:4}
 	\end{equation}
 	
 	\begin{equation}
-		F_5\left(i\right)   = \text{ContSol}_i
+		f_5\left(i\right)   = \text{ContSol}_i
 		\label{feature:5}
 	\end{equation}
 	
 	\begin{equation}
-		F_6\left(i\right)   = \text{Random}\left(i\right)
+		f_6\left(i\right)   = \text{Random}\left(i\right)
 		\label{feature:6}
 	\end{equation}
+
 \end{multicols}
 
 \clearpage
