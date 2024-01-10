@@ -334,22 +334,22 @@ Otra variante es la versión polinomial de la mochila (PKP, por sus siglas en in
 
 Debido a la dificultad para resolver el PRKP la literatura se ha limitado a explorar dos casos especiales del problema. El problema cuadrático de la mochila (QKP, por sus siglas en inglés, Quadratic Knapsack Problem) \citep{gallo_quadratic_1980} y el problema cúbico de la mochila (CKP, por sus siglas en inglés, Cubic Knapsack Problem) \citep{forrester_strengthening_2022}. El QKP presenta sinergias entre dos elementos y ha demostrado ser útil en un gran espectro de aplicaciones como posicionamiento satelital \citep{witzgall_mathematical_1975}, localizaciones de centros de transporte como aeropuertos, ferrocarriles o terminales de carga \citep{rhys_selection_1970}. El CKP es extendido desde el QKP y considera sinergias hasta con tres elementos. Además, posee aplicaciones como en el problema de satisfacción Max 3-SAT \citep{kofler_penalty_2014}, el problema de selección \citep{gallo_fast_1989}, el problema de alineación de redes \citep{mohammadi_triangular_2017}, y la detección y tratamiento de enfermedades de transmisión sexual \citep{zhao_treatments_2008}.
 
-Este trabajo propone el uso de una técnica de machine learning para resolver el PRKP. Se compara con la literatura y se analizan los resultados obtenidos en instancias conocidas con soluciones conocidas y desconocidas de mayor tamaño.
+Este trabajo propone el uso de una técnica de machine learning para resolver el PRKP. Una estrategia greedy que descarte elementos de las soluciones para acotar el espacio, siendo escalable y rápida de ejecutar en grandes tamaños de instancias, usando una red neuronal para la toma decisiones. Se compara con la literatura y se analizan los resultados obtenidos en instancias conocidas con soluciones conocidas y desconocidas de mayor tamaño.
 
 \section{Objetivos}
 \subsubsection*{Objetivo general}
-Implementar una estrategia basada en machine learning para resolver el PRKP.
+Implementar un algoritmo basado en machine learning para resolver el PRKP.
 \subsubsection*{Objetivos específicos}
 \begin{itemize}
 	\item Revisar la literatura relacionada con problemas de la mochila similares y metodologías aplicables.
-	\item Diseñar una estrategia basada en machine learning para el PRKP.
+	\item Diseñar un algoritmo basado en machine learning para el PRKP.
 	\item Implementar la estrategia propuesta basada en machine learning.
 	\item Evaluar los resultados y comparar el rendimiento con las metodologías existentes en literatura.
 \end{itemize}
 
 \section{Estructura del documento}
 
-El documento consta de seis capítulos, en los cuales se discute el problema y su formulacion formal (2), la metodología propuesta para el PRKP (3), un análisis comparativo de los resultados experimentales (4), y finalmente una revisión y discusión para concluir el documento (5).
+El documento consta de seis capítulos, en los cuales se discute el problema y su formulación formal (2), la metodología propuesta para el PRKP (3), un análisis comparativo de los resultados experimentales (4), y finalmente, una revisión y discusión para concluir el documento (5).
 
 \clearpage
 
@@ -357,15 +357,9 @@ El documento consta de seis capítulos, en los cuales se discute el problema y s
 Este capítulo comprende la definición formal del problema junto al modelo matemático de programación entera. Además, explora literatura asociada a técnicas y metodologías empleadas para la resolución de otros problemas de la mochila que pueden ser extendidos al PRKP.
 
 \section{Descripción del problema}
-	El PRKP es definido formalmente como un conjunto de elementos $I = \{1,2,\hdots,N\}$, donde estos tienen un beneficio asociado $P_i \in \mathbb{R}:i\in I$. Además, los elementos poseen un coste de comportamiento estocástico que puede variar de forma continua entre una cota inferior y una superior, $C_i \in [C^L_i,C^U_i]$, donde $C^L_i$ es el costo base, y $C^U_i$ el costo máximo. Solo algunos elementos tienen comportamiento estocástico, aquellos que no, cumplen que $C_i = C^L_i$. El parámetro que define cuantos elementos de $I$ pueden tener comportamiento estocástico es $\Gamma \leq |I|$, es decir $|\{i: C_i > C^L_i\}| \leq \Gamma$. 	Además existe un presupuesto máximo $W$ para los costes. El conjunto de sinergias polinomiales se define como $S = \{ A: A \subseteq I \land |A|>1  \}$. Para cada subconjunto de elementos de $I$, existe un beneficio asociado $P_A$. Finalmente, el objetivo del problema es encontrar $X \subseteq I$ que maximice el beneficio total de los elementos de $X$ sumado a los beneficios de sinergias, que aplican cuando $A\subseteq X$, y que además, mantenga un coste total menor al presupuesto para cualquier variación estocástica en costes de los elementos.
+	El PRKP es definido formalmente como un conjunto de elementos $I = \{1,2,\hdots,N\}$, donde estos tienen un beneficio asociado $P_i \in \mathbb{R}:i\in I$.Además, los elementos poseen un coste de comportamiento estocástico que puede variar de forma continua entre una cota inferior y una superior, $C_i \in [C^L_i,C^U_i]$, donde $C^L_i$ es el costo base, y $C^U_i$ el costo máximo. Solo algunos elementos tienen comportamiento estocástico, aquellos que no, cumplen que $C_i = C^L_i$. El parámetro que define cuantos elementos de $I$ pueden tener comportamiento estocástico es $\Gamma \leq |I|$, es decir $|\{i: C_i > C^L_i\}| \leq \Gamma$. Además, existe un presupuesto máximo $W$ para los costes. Mientras, el conjunto de sinergias polinomiales se define como $A = \{ \bar{I}_j \textbackslash \bar{I}_j \subseteq I: j \in 2^{|I|}\}$. Para cada sinergia $a \in A$ existe un beneficio asociado $P_a$. Finalmente, el objetivo del problema es encontrar $X \subseteq I$ que maximice el beneficio total de los elementos de $X$ sumado a los beneficios de sinergias, que aplican cuando $a \subseteq X$, y que además, mantenga un coste total menor al presupuesto para cualquier variación estocástica en costes de los elementos.
 	
-	\subsection*{Un ejemplo de instancia de PRKP}
-		$$I =\{1,2,3\},$$
-		$$W = 10 \hspace{0.5cm}\text{y }$$ 
-		$$\Gamma = 2 \text{.}$$
-		
-
-	La Tabla \ref{tab:example_p} describe las cotas inferior y superior de los costos de los elementos de la instancia, así como los beneficios de cada elemento individual. La Tabla \ref{tab:sinergias} muestra los beneficios de cada sinergia, que se agrega a la solución, si todos los elementos de ella están presentes en la solución. El número de sinergias es siempre igual al número de particiones de $I$, aunque en el caso de que hayan sinergias cuyo beneficio es cero, estas se omiten de la tabla.
+	Sea un ejemplo de instancia de PRKP con $I =\{1,2,3\},W = 10 \text{ y } \Gamma = 2$. La Tabla \ref{tab:example_p} describe las cotas inferior y superior de los costos de los elementos de la instancia, así como los beneficios de cada elemento individual. La Tabla \ref{tab:sinergias} muestra los beneficios de cada sinergia. El número de sinergias es siempre igual a $2^|I| - |I|$, aunque en el caso de que hayan sinergias cuyo beneficio es cero, estas se omiten de la tabla.	Una solución factible de esta instancia es $X = \{1,3\}$ cuyo beneficio total es 6, mientras que la solución óptima de esta instancia, es $X = \{2,3\}$ con un beneficio total de 9.
 	
 	\begin{table}[H]
 		\centering
@@ -376,11 +370,11 @@ Este capítulo comprende la definición formal del problema junto al modelo mate
 		\hline
 		$i$ & 1 & 2 & 3 \\
 		\hline
-		$PS_i$ & 3.0 & 6.0 & 10.0 \\
+		$PS_i$ & 3 & 6 & 10 \\
 		\hline
-		$C^L_i$ & 2.0 & 3.0 & 4.0 \\
+		$C^L_i$ & 2 & 3 & 4 \\
 		\hline
-		$C^U_i$ & 4.0 & 4.0 & 5.0 \\
+		$C^U_i$ & 4 & 4 & 5 \\
 		\hline
 	\end{tabular}
 	
@@ -394,128 +388,85 @@ Este capítulo comprende la definición formal del problema junto al modelo mate
 			\hline
 			$A$    & $P_A$\\
 			\hline
-			$\{1,2\}$ & -2.0 \\
+			$\{1,2\}$ & -2 \\
 			\hline
-			$\{1,3\}$ & 2.0 \\
+			$\{1,3\}$ & 2 \\
 			\hline
-			$\{2,3\}$ & 2.0\\
+			$\{2,3\}$ & 2\\
 			\hline
-			$\{1,2,3\}$ & 3.0\\
+			$\{1,2,3\}$ & 3\\
 			\hline
 		\end{tabular}
 	\end{table}
 	
 
 		
-	Una solución factible de esta instancia es $X = \{1,3\}$ cuyo beneficio total es 6, mientras que la solucion optima de esta instancia, es $X = \{2,3\}$ con un beneficio total de 9.
+
 	
     
     \section{Modelo matemático}
     
     
-    \cite{baldo_polynomial_2023} describe la formulación del modelo matemático linealizado del PRKP compatible con solvers exactos de programación lineal. El modelo se describe a continuación.
-    
-    \paragraph*{Parámetros}
-    
+    \cite{baldo_polynomial_2023} describe una formulación del PRKP mediante un modelo matemático linealizado que es compatible con solvers de propósito general. El modelo de programación lineal entera mixta (MILP) usa una variable de decisión binaria $x_i: i \in I$ que toma el valor 1 si un elemento pertenece a la solución final. Las variables de decisión $\rho$ y $\pi_i$ representan la diferencia entre el coste base y el coste máximo de un elemento. Se ajustan de forma que si el coste del elemento $i$ varía entonces la suma entre $\rho$ y $\pi_i$ es igual al coste máximo. Así la función objetivo se encarga de maximizar $\rho$ y $\pi_i$ para que considere el máximo coste posible para todos los elementos.
+        
  \begingroup 
  \renewcommand{\arraystretch}{1.4}
-  \begin{table}
+  \begin{table}[H]
+  \caption{Resumen de los conjuntos, parámetros y variables de decisión}
   \begin{tabular}{l p{11cm}}
   	\hline
   	Conjuntos & \\
   	\hline
-  	$I$ & El conjunto de elementos.\\
-  	$S$& El conjunto de sinergias polinomiales.\\
+  	$I$ & El conjunto de elementos \{ 1,2,\dots,N\}.\\
+  	$A$& El conjunto de sinergias $\{ I_j \textbackslash I_j \subseteq I:j\in 2^|I| \}$.\\
   	\hline Parámetros & \\ \hline
   	
-  	$P_i$ & El beneficio asociado al elemento $i \in I$ \\
-  	$C^L_i$& El coste base del elemento $i \in I$    \\
-  	$C^U_i$& El coste máximo del elemento $i \in I$     \\
+  	$P_i$ & El beneficio asociado al elemento $i \in I$. \\
+  	$C^L_i$& El coste base del elemento $i \in I$.    \\
+  	$C^U_i$& El coste máximo del elemento $i \in I$.     \\
   	$W$& El presupuesto o coste total máximo asociado al problema.\\
-  	$A \subseteq i$& Representa los elementos de una sinergia polinomial arbitraria.\\
-  	$P_A$& El beneficio de la sinergia polinomial arbitraria $A$.\\
+  	$B_a$ & El beneficio de la sinergia polinomial arbitraria $a \in A$.\\
   	$\Gamma$& El número máximo de elementos que pueden tener costo distinto al costo base.\\
   	
   	\hline Variables de decisión &\\ \hline
-  	$x_i$ & Vale 1 si el elemento $i \in I$ está presente en la solución óptima.\\
-  	$\mathcal{Z}_A$ & Vale 1 si todos los elementos de $A \in S$ están en X, sino 0.\\
-  	$\mathbb{\rho}, \mathbb{\pi}_i$ & Variables de decisión auxiliares. \\
-  	
+  	$x_i$ & Toma valor 1 si el elemento $i \in I$ está presente en la solución óptima.\\
+  	$z_a$ & Toma valor 1 si $\forall a \in A, a \in X$, si no 0.\\
+  	$\mathbb{\rho}, \mathbb{\pi}_i$ & Cumplen que  $\rho + \pi_i  = C_i^U - C_i^L$ si el coste del elemento $i$ varía, sino $\rho = C_i^U - C_i^L$ y $\pi_i = 0$.\\
+  	\hline
   	
   \end{tabular}
   \end{table} 
   
   \endgroup
     
-	\paragraph*{Función objetivo}
 	
+\begin{equation}
+	\text{Maximizar} \quad \sum_{i\in I} P_i x_i + \sum_{a\in A} B_a z_a - \sum_{i\in I} LC_i x_i - \left(\Gamma\rho+\sum_{i\in I} \pi_i\right) \label{eq:of}
+\end{equation}
+\begin{align}	 
+	&\sum_{i\in I} C_i^L x_i + \Gamma\rho + \sum_{i\in I} \pi_i \leq W& \label{eq:costs} \\
+	&\rho + \pi_i \geq (C_i^U - C_i^L) x_i & \forall i \in I \label{eq:cost_relax} \\
+	&\sum_{i\in a} x_i \leq |a| - 1 + z_a & \forall a \in A:B_a < 0 \label{eq:fijar_z} \\
+	&z_a \leq x_i & \forall i \in a, \forall a \in A : B_a > 0 \label{eq:fijar_z_2} \\
+	&x_i \in \{0,1\} \quad &\forall i \in I \\
+	&z_a \in \{0,1\} \quad &\forall a \in A \\
+	&\rho \in \mathbb{R}^{+} \quad \pi_i \in \mathbb{R}^{+} &\forall i \in I \label{eq:dom}
+\end{align}
 	
-	\begin{equation}
-		\label{eq:of}
-		\text{Maximizar} \sum_{i\in I}{P_ix_i} + \sum_{A\in S} P_A\cdot \mathcal{Z}_A -
-		\sum_{i\in I} {LC_{i}x_i} - \left(\Gamma\rho+\sum_{i \in I} \pi_i\right)
-	\end{equation}
 
-    \paragraph*{Restricciones}
     
-    \begin{equation}
-   		\label{eq:costs}
-  		\sum_{i\in I}{C^L_ix_i} + \Gamma\rho+\sum_{i \in I} \pi_i \leq W
-    \end{equation}
-    
-    \begin{equation}
-    	\label{eq:cost_relax}
-    	\rho + \pi_i \geq \left(C^U_i - C^L_i\right)x_i 
-    	\hspace{1cm}
-    	 \forall i \in I
-    \end{equation}
-    
-    \begin{equation}
-    	\label{eq:fijar_z}
-    	\sum_{i\in A} x_i \leq |A| - 1 + Z_{A} \hspace{1cm} \forall A \in S:P_A < 0
-    \end{equation}
-   
-    \begin{equation}
-    	\label{eq:fijar_z_2}
-    	Z_{A} \leq x_i \hspace{1cm} \forall i \in A \in S: P_A > 0
-    \end{equation}
-    
-    \begin{equation}
-    	x_i \in \{0,1\},
-    	\forall i \in I,
-    \end{equation}
-    
-    \begin{equation}
-    	Z_{A} \in \{0,1\} \forall A \in S
-    \end{equation}
-    
-    \begin{equation}
-    	\rho \geq 0
-    \end{equation}
-    
-    \begin{equation}
-    	\pi_i \geq 0, \forall i \in I
-    \end{equation}
-    
-    
-    La función objetivo en la ecuación \eqref{eq:of} representa el beneficio total de elementos y sinergias de los elementos restando el coste máximo posible que estos puedan tener. Las ecuaciones \eqref{eq:costs} y \eqref{eq:cost_relax} representan la restricción de presupuesto, $X$ debe ser robusto a las variaciones en los costes por lo que se usa un acercamiento que asume el peor de los casos, es decir, el cálculo del coste es siempre maximizado según las posibles variaciones. \cite{baldo_polynomial_2023} genera el problema dual de la maximización de los costes, construyendo la dualidad de Lagrange. Esto resulta en la restricción \ref{eq:cost_relax} y las variables de decisión auxiliares $\rho$ y $\pi_i: i \in I$, de forma que el cálculo del coste se expresa como un problema de minimización.
-    
-    Las restricciones \eqref{eq:fijar_z} y \eqref{eq:fijar_z_2} definen el valor de $\mathcal{Z}$ estableciéndolo como uno si todos elementos de una sinergia están en la solución final y cero en caso contrario.
+    La función objetivo \eqref{eq:of} representa el beneficio total de elementos y sinergias de los elementos restando el coste máximo posible que estos puedan tener. $\sum_{i\in I} P_i x_i$ es la suma de todos los beneficios individuales de cada elemento. $\sum_{a\in A} B_a z_a$ corresponde a la suma de los beneficios de cada sinergia $\sum_{i\in I} C_i^L x_i$ es la suma de todos los costes mínimos  y corresponde a la suma de la diferencia de los costes. $\left(\Gamma\rho+\sum_{i\in I} \pi_i\right)$. Las ecuaciones \eqref{eq:costs} y \eqref{eq:cost_relax} representan la restricción de presupuesto. La solución debe ser robusta a las variaciones en los costes por lo que se usa un acercamiento que asume el peor de los casos, es decir, el cálculo del coste es siempre maximizado según las posibles variaciones. Para ello \cite{baldo_polynomial_2023} genera el problema dual de la maximización de los costes, construyendo la dualidad de Lagrange. Esto resulta en las restricciones \eqref{eq:costs} y \eqref{eq:cost_relax} y las variables de decisión auxiliares $\rho$ y $\pi_i (i \in I)$, de forma que el cálculo del coste se expresa como un problema de minimización. Las restricciones \eqref{eq:fijar_z} y \eqref{eq:fijar_z_2} aseguran que el valor de $z$ estableciéndolo como uno si todos elementos de una sinergia están en la solución final y cero en caso contrario. La restricción \eqref{eq:dom} establece $\rho$ y $\pi_i$ números reales positivos, así el modelo no establece costes negativos en la función de maximización y en el cálculo del coste. A través de la restricción \eqref{eq:cost_relax}.
   
 \section{Revisión de literatura}
 
 
-El trabajo de \cite{baldo_polynomial_2023} introduce el PRKP y una metodología para resolverlo, proponiendo un algoritmo genético y un algoritmo basado en machine learning. Este último utiliza un clasificador random forest que predice la probabilidad de cada elemento de estar presente en la solución óptima. Esta predicción se usa para fijar variables de decisión, reduciendo así el tiempo de ejecución de un solver exacto.
+El trabajo de \cite{baldo_polynomial_2023} introduce el PRKP y una metodología para resolverlo, proponiendo un algoritmo genético y un algoritmo basado en machine learning. Este último utiliza un clasificador random forest que predice la probabilidad de cada elemento de estar presente en la solución óptima. Esta predicción se usa para fijar variables de decisión, reduciendo así el tiempo de ejecución de un solver exacto. Como solo existe un trabajo para el PRKP, esta revisión se enfoca en metodologías de solución basadas en machine learning para variantes del KP. \cite{li_novel_2021} utiliza redes neuronales para obtener predicciones de soluciones para instancias de KP que poseen funciones objetivo no lineales desconocidas. De esta forma solo se conocen parcialmente algunos valores de la función objetivo pero no su formulación. Los autores obtienen buenos resultados con una estructura basada en teoría de juegos, junto al uso de redes neuronales adversarias, considerando una red para modelar la función objetivo y otra con el método de descenso de gradiente adaptativo para resolver el problema.
 
-Como solo existe un trabajo para el PRKP, esta revisión se enfoca en metodologías de solución basadas en machine learning para variantes del KP.
+\cite{rezoug_application_2022} aborda el KP usando distintas técnicas para evaluar las características de los elementos, entre ellos redes neuronales, regresión de procesos gaussianos, random forest y support vector regression. Ellos resuelven el problema original usando solo un subconjunto de los elementos. Luego mediante el descenso del gradiente y el uso de características de los elementos deciden cuáles de los elementos excluidos debe agregar a la solución inicial obtenida. Los resultados muestran que el modelo machine learning entrega soluciones similares a los otros clasificadores y con menores tiempos de ejecución.
 
-\cite{li_novel_2021} utiliza redes neuronales para obtener predicciones de soluciones para instancias de KP que poseen funciones objetivo no lineales desconocidas. De esta forma solo se conocen parcialmente algunos valores de la función objetivo pero no su formulación. Los autores obtienen buenos resultados con una estructura basada en teoría de juegos, junto al uso de redes neuronales adversarias, con las que se usa una red para modelar la funcion objetivo y una con método de descenso de gradiente adaptativo para resolver el problema.
+\cite{afshar_state_2020} propuso un algoritmo para generar soluciones para el KP usando un modelo de deep reinforcement learning que selecciona los elementos de forma greedy. El algoritmo propuesto construye las soluciones en base a las decisiones del modelo y genera soluciones con una razón de similitud con el óptimo del 99.9\%. Además, usa una arquitectura dos redes neuronales con un paso de reducción de dimensión de características que reduce la complejidad espacial del problema en la red. Esto resulta en modelos que usan menos memoria y se ejecutan más rápido.
 
-\cite{rezoug_application_2022} aborda el KP usando distintas técnicas para evaluar las características de los elementos, entre ellos redes neuronales, regresión de procesos gaussianos, random forest y support vector regression. Ellos, resuelven el problema original usando solo un subconjunto de los elementos. Luego, mediante el descenso del gradiente y el uso de características de los elementos, decide cuáles de los elementos excluidos se debe agregar a la solución inicial obtenida. Los resultados muestran que el modelo machine learning entrega soluciones similares a los otros clasificadores y con menores tiempos de ejecución.
-
-\cite{afshar_state_2020} propuso un algoritmo para generar soluciones para el KP usando un modelo de Deep Reinforcement Learning que selecciona los elementos de forma greedy. El algoritmo propuesto construye las soluciones en base a las decisiones del modelo y genera soluciones con una razón de similitud con el óptimo del 99.9\%. Además, usa una arquitectura de A2C con un paso de cuantización de características, que reduce la complejidad espacial del problema en la red, resultando en modelos que usan menos memoria y se ejecutan más rápido.
-
-El uso de técnicas basadas en Machine learning por los autores anteriores para abordar variantes del KP evidencian la posibilidad de diseñar estrategias efectivas que resuelvan el PRKP de forma rápida justificando el diseño de la metodología en esta memoria.
+El uso de técnicas basadas en machine learning para abordar variantes del KP en la literatura, evidencian la posibilidad de diseñar estrategias efectivas que resuelvan el PRKP de forma eficiente.
  
 
 \chapter{Metodología}
@@ -524,7 +475,7 @@ Este capítulo presenta el algoritmo propuesto para resolver el PKRP, así como 
 
 \section{Algoritmo propuesto}
 
-Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa de confianza sobre la solución final obtenida. El algoritmo usa una red neuronal como clasificador, que con base en ciertas características de cada elemento, decide la probabilidad de estar o no en la solución final. El clasificador debe entrenarse previamente para ejecutar el algoritmo general y obtener predicciones adecuadas. Estas predicciones se usan para asumir ceros en la solución y reducir la instancia original a una más pequeña, eliminando elementos de los conjuntos de la instancia. Este proceso puede ejecutarse un número arbitrario de veces, mientras se mantenga la precisión del modelo, al evaluar instancias con cada vez menos elementos. El enfoque define una estructura para la red, una serie de características para elemento, dos etapas de entrenamiento y un algoritmo de evaluación que usará el clasificador entrenado para evaluar y encontrar soluciones para las instancias.
+Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa del nivel de confianza sobre la solución final obtenida. El algoritmo usa una red neuronal como clasificador, que se basa en características de cada elemento para decidir la probabilidad de estar o no en la solución final. El clasificador es entrenado antes del algoritmo general para obtener predicciones adecuadas. Estas predicciones son usadas para que los elementos tomen valores de 0\% de probabilidad y así reducir la instancia original a una más pequeña. Este proceso es ejecutado un número arbitrario de veces, mientras se mantenga la precisión del modelo, al evaluar instancias con cada vez menos elementos. El enfoque define una estructura para la red, una serie de características para elemento, dos etapas de entrenamiento y un algoritmo de evaluación que usa el clasificador entrenado para evaluar y encontrar soluciones para las instancias.
 
 
 \begin{algorithm}[H]
