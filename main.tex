@@ -473,14 +473,57 @@ El uso de técnicas basadas en machine learning para abordar variantes del KP en
 
 Este capítulo presenta el algoritmo propuesto para resolver el PKRP, así como las definiciones del modelo de machine learning que actúa como clasificador, las características de los elementos que se usan y el proceso de reducción de instancias.
 
-\section{Algoritmo propuesto}
+\section{Estragetia propuesta}
 
-Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa del nivel de confianza sobre la solución final obtenida. El algoritmo usa una red neuronal como clasificador, que se basa en características de cada elemento para decidir la probabilidad de estar o no en la solución final. El clasificador es entrenado antes del algoritmo general para obtener predicciones adecuadas. Estas predicciones son usadas para que los elementos tomen valores de 0\% de probabilidad y así reducir la instancia original a una más pequeña. Este proceso es ejecutado un número arbitrario de veces, mientras se mantenga la precisión del modelo, al evaluar instancias con cada vez menos elementos. El enfoque define una estructura para la red, una serie de características para elemento, dos etapas de entrenamiento y un algoritmo de evaluación que usa el clasificador entrenado para evaluar y encontrar soluciones para las instancias. La construcción del algoritmo propuesto
+Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa del nivel de confianza sobre la solución final obtenida. El algoritmo usa una red neuronal como clasificador, que se basa en características de cada elemento para decidir la probabilidad de estar o no en la solución final. El clasificador es entrenado antes de su uso para obtener predicciones adecuadas. Estas predicciones son usadas para que los elementos tomen valores de 0\% de probabilidad y así reducir la instancia original a una más pequeña. Este proceso es ejecutado un número arbitrario de veces, mientras se mantenga la precisión del modelo, al evaluar instancias con cada vez menos elementos. El enfoque define una estructura para la red, una serie de características para elemento, dos etapas de entrenamiento y un algoritmo de evaluación que usa el clasificador entrenado para evaluar y encontrar soluciones para las instancias. Preparar este algoritmo requiere del siguiente proceso:
+
+ \begin{algorithm}[H]
+	\caption{Algoritmo de evaluación}\label{alg:general}
+	\begin{algorithmic}[1]
+		\Statex \textbf{Input:} $\tau$
+		\Statex \textbf{Output:} $x$
+		\Loop
+		\State $F \gets$ \texttt{F($I$)}\label{alg1:full_features}
+		\State $\tilde{x} \gets$ \texttt{Net($F$)} \label{alg1:get_pred}
+		\State $Z \gets$ \texttt{Z($I$,$\tilde{x},\tau$)} \label{alg1:get_Z}
+		\If{$ |Z| = 0$ \textbf{or} $\min(\tilde{x}) > \tau$} \label{alg1:break_condition}
+		\State \textbf{break}
+		\EndIf
+		\State $I \gets I\setminus Z$ 								\label{alg1:update_I}
+		\State $S \gets \{A \in S, \forall i \in A: i \notin Z\}$  \label{alg1:update_S}
+		\EndLoop
+		\State $x \gets$ \texttt{Solver($I$)} \label{alg1:exact_solver} 
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+El Algoritmo \ref{alg:general} se encarga de usar una red pre-entrenada como clasificador y resolver la instancia. Comienza dentro de un ciclo, el primer paso en la línea \ref{alg1:full_features} es generar características derivadas de los parámetros del modelo, que describan a cada elemento en particular. Estas características son usadas por la red en la línea \ref{alg1:get_pred} para generar la predicción de cada elemento. El conjunto de elementos de la instancia, la predicción de la red y el parámetro $\tau$ son usados en la línea \ref{alg1:get_Z} para generar $Z$, el conjunto de elementos a eliminar de la solución final. $\tau$ define el mínimo valor que debe tener la predicción de un elemento, para ser ignorado en la solución final. Todos los elementos de $Z$ se quitan de la instancia, así como las respectivas sinergias polinomiales en las líneas \ref{alg1:update_I} y \ref{alg1:update_S}. Este proceso se ejecuta hasta que $Z$ se construye sin elementos, o hasta que ningún elemento consigue una probabilidad de ser cero menor a $\tau$. Finalmente, en la linea \ref{alg1:exact_solver} se usa un solver exacto para resolver la instancia que contiene un número reducido de elementos.
+
+\begin{algorithm}[H]
+	\caption{Estructura de la estrategia}\label{alg:prep}
+	\begin{algorithmic}[1]
+		\State $\texttt{RedNeuronal}$ $\gets \mathtt{GenerarRedNeuronal()}$
+		\State $\texttt{RedNeuronal}$ $\gets \mathtt{EntrenarRedNeuronal(RedNeuronal)}$
+		\State $\texttt{RedNeuronal}$ $\gets \mathtt{AfinarRedNeuronal(RedNeuronal)}$
+		\For{\text{Instancia en el conjunto de instancias que se desea resolver}}
+			\State $asd$
+		\EndFor
+		\State $\texttt{}$ $\gets \mathtt{AfinarRedNeuronal(RedNeuronal)}$
+				
+		
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+
 
 \newcommand{\algrule}[1][.2pt]{\par\vskip.5\baselineskip\hrule height #1\par\vskip.5\baselineskip}
 
 
-\section{Clasificador}
+\section{Definición de la red neuronal}
+\label{section:clasificador}
 
 El clasificador utilizado es una red neuronal de tres capas de 50 nodos cada una, con una salida, y una función de activación. Estructurada para tomar como entrada las características de un elemento y obtener la predicción.
 	
@@ -646,9 +689,6 @@ Así, la red toma como argumento el vector de características $\texttt{f($i$)} 
 
 
 
-
-
-
 Entre estas:
 \begin{itemize}
 	\item La característica en la ecuación \eqref{feature:1}, representa el costo de un elemento normalizado al presupuesto total disponible para en la instancia del problema.
@@ -662,9 +702,10 @@ Entre estas:
 \end{itemize}
 
 
-\subsection{Entrenamiento}
+\section{Entrenamiento}
+\label{section:training}
 
-La primera etapa consiste en entrenar la red para predecir la solución óptima de cada instancia, y así crear un clasificador general. La segunta etapa afina la precisión usando de los pasos intermedios del algoritmo de evaluación (\ref{alg:general}). Además, la red se entrena con soluciones que son generadas por un solver exacto que calcula el óptimo para cada instancia. 
+La red neuronal se entrena para predecir la solución óptima de cada instancia y así crear un clasificador general. La segunta etapa afina la precisión usando de los pasos intermedios del algoritmo de evaluación (\ref{alg:general}). Además, la red se entrena con soluciones que son generadas por un solver exacto que calcula el óptimo para cada instancia. 
 
 \begin{algorithm}[H]
 	\caption{Entrenamiento}\label{alg:training}
@@ -683,6 +724,8 @@ La primera etapa consiste en entrenar la red para predecir la solución óptima 
 		\EndFor \label{line:endloop}
 	\end{algorithmic}
 \end{algorithm}
+
+\section{Afinación}
 
 El Algoritmo \ref{alg:training} de entrenamiento comienza inicializando la red con pesos aleatorios en la línea \ref{line:def_net}. A continuación, se inicia un bucle itera sobre cada instancia del conjunto de entrenamiento en la línea \ref{line:startloop}. Para cada instancia, se obtiene el conjunto de elementos $I$ de la instancia, en la línea \ref{line:i_from_instance}. Se obtiene la solución óptima $x$ para la instancia usando el solver en la línea \ref{line:solveinstance}. Posteriormente, se inicia un ciclo interno sobre los elementos de la instancia, donde la red neuronal realiza predicciones $\tilde{x_i}$ sobre las características de cada elemento utilizando la función \(f(i)\) en la línea \ref{line:prediction}.
 Usando esta predicción se calcula la perdida entre la solución real $x_i$ y la predicción $\tilde{x}_i$ del elemento. Los pesos de la red se actualizan usando el algoritmo de optimización Adam, introducido por \cite{kingma2017adam}, que funciona como alternativa al descenso de gradiente estocástico, usando la pérdida anteriormente calculada. El proceso de predicción, cálculo de pérdida y optimización se repite para todos los índices en el bucle interno. Una vez completado, se regresa al bucle externo para la siguiente instancia del conjunto de entrenamiento. Habiendo procesado todas las instancias del conjunto de entrenamiento, la red neuronal $Net$ se considera entrenada y el algoritmo termina.
@@ -739,32 +782,6 @@ El Algoritmo \ref{alg:tunning} describe la etapa de afinación y sigue una estru
  		\EndFor
  	\end{algorithmic}
  \end{algorithm}
- 
- 
-\section{Resolución de Instancias}
- 
- \begin{algorithm}[H]
- 	\caption{Algoritmo de evaluación}\label{alg:general}
- 	\begin{algorithmic}[1]
- 		\Statex \textbf{Input:} $\tau$
- 		\Statex \textbf{Output:} $x$
- 		\Loop
- 		\State $F \gets$ \texttt{F($I$)}\label{alg1:full_features}
- 		\State $\tilde{x} \gets$ \texttt{Net($F$)} \label{alg1:get_pred}
- 		\State $Z \gets$ \texttt{Z($I$,$\tilde{x},\tau$)} \label{alg1:get_Z}
- 		\If{$ |Z| = 0$ \textbf{or} $\min(\tilde{x}) > \tau$} \label{alg1:break_condition}
- 		\State \textbf{break}
- 		\EndIf
- 		\State $I \gets I\setminus Z$ 								\label{alg1:update_I}
- 		\State $S \gets \{A \in S, \forall i \in A: i \notin Z\}$  \label{alg1:update_S}
- 		\EndLoop
- 		\State $x \gets$ \texttt{Solver($I$)} \label{alg1:exact_solver} 
- 	\end{algorithmic}
- \end{algorithm}
- 
- 
- 
- El Algoritmo \ref{alg:general} se encarga de usar una red pre-entrenada como clasificador y resolver la instancia. Comienza dentro de un ciclo, el primer paso en la línea \ref{alg1:full_features} es generar características derivadas de los parámetros del modelo, que describan a cada elemento en particular. Estas características son usadas por la red en la línea \ref{alg1:get_pred} para generar la predicción de cada elemento. El conjunto de elementos de la instancia, la predicción de la red y el parámetro $\tau$ son usados en la línea \ref{alg1:get_Z} para generar $Z$, el conjunto de elementos a eliminar de la solución final. $\tau$ define el mínimo valor que debe tener la predicción de un elemento, para ser ignorado en la solución final. Todos los elementos de $Z$ se quitan de la instancia, así como las respectivas sinergias polinomiales en las líneas \ref{alg1:update_I} y \ref{alg1:update_S}. Este proceso se ejecuta hasta que $Z$ se construye sin elementos, o hasta que ningún elemento consigue una probabilidad de ser cero menor a $\tau$. Finalmente, en la linea \ref{alg1:exact_solver} se usa un solver exacto para resolver la instancia que contiene un número reducido de elementos.
  
  
 \clearpage
