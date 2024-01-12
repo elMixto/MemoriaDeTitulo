@@ -475,41 +475,7 @@ Este capítulo presenta el algoritmo propuesto para resolver el PKRP, así como 
 
 \section{Algoritmo propuesto}
 
-Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa del nivel de confianza sobre la solución final obtenida. El algoritmo usa una red neuronal como clasificador, que se basa en características de cada elemento para decidir la probabilidad de estar o no en la solución final. El clasificador es entrenado antes del algoritmo general para obtener predicciones adecuadas. Estas predicciones son usadas para que los elementos tomen valores de 0\% de probabilidad y así reducir la instancia original a una más pequeña. Este proceso es ejecutado un número arbitrario de veces, mientras se mantenga la precisión del modelo, al evaluar instancias con cada vez menos elementos. El enfoque define una estructura para la red, una serie de características para elemento, dos etapas de entrenamiento y un algoritmo de evaluación que usa el clasificador entrenado para evaluar y encontrar soluciones para las instancias.
-
-
-La metodología se desarrolla en tres etapas fundamentales. En primer lugar, se crea y entrena un clasificador basado en una red neuronal. Este clasificador está diseñado para evaluar la probabilidad de que cada elemento pertenezca a la solución final del Problema de la Mochila Probabilística Restringida (PKRP). Las características específicas de cada elemento, como el costo normalizado, el rango de costos, la variabilidad estocástica y otros, se utilizan como entrada para el clasificador.
-
-En la segunda etapa, se lleva a cabo el entrenamiento de la red neuronal en dos fases. Inicialmente, se entrena la red con soluciones óptimas generadas por un solver exacto para establecer un clasificador general. Posteriormente, se realiza una afinación más precisa utilizando pasos intermedios del algoritmo general propuesto.
-
-Finalmente, en la tercera etapa, se emplea el clasificador entrenado en el algoritmo general de evaluación. Este algoritmo iterativo busca reducir gradualmente la complejidad del PKRP, utilizando el clasificador para predecir la probabilidad de inclusión de cada elemento en la solución final. Se realiza una reducción de instancias mediante la eliminación de elementos menos probables de contribuir a la solución, manteniendo la precisión del modelo a lo largo de las iteraciones. En resumen, la metodología abarca la creación y entrenamiento del clasificador, seguido de su utilización en el algoritmo iterativo para evaluar y reducir instancias del PKRP.
-
-
-
-\begin{algorithm}[H]
-	\caption{Algoritmo de evaluación}\label{alg:general}
-	\begin{algorithmic}[1]
-		\Statex \textbf{Input:} $\tau$
-		\Statex \textbf{Output:} $x$
-		\Loop
-		\State $F \gets$ \texttt{F($I$)}\label{alg1:full_features}
-		\State $\tilde{x} \gets$ \texttt{Net($F$)} \label{alg1:get_pred}
-		\State $Z \gets$ \texttt{Z($I$,$\tilde{x},\tau$)} \label{alg1:get_Z}
-		\If{$ |Z| = 0$ \textbf{or} $\min(\tilde{x}) > \tau$} \label{alg1:break_condition}
-		\State \textbf{break}
-		\EndIf
-		\State $I \gets I\setminus Z$ 								\label{alg1:update_I}
-		\State $S \gets \{A \in S, \forall i \in A: i \notin Z\}$  \label{alg1:update_S}
-		\EndLoop
-		\State $x \gets$ \texttt{Solver($I$)} \label{alg1:exact_solver} 
-	\end{algorithmic}
-\end{algorithm}
-
-
-
-El Algoritmo \ref{alg:general} se encarga de usar una red pre-entrenada como clasificador y resolver la instancia. Comienza dentro de un ciclo, el primer paso en la línea \ref{alg1:full_features} es generar características derivadas de los parámetros del modelo, que describan a cada elemento en particular. Estas características son usadas por la red en la línea \ref{alg1:get_pred} para generar la predicción de cada elemento. El conjunto de elementos de la instancia, la predicción de la red y el parámetro $\tau$ son usados en la línea \ref{alg1:get_Z} para generar $Z$, el conjunto de elementos a eliminar de la solución final. $\tau$ define el mínimo valor que debe tener la predicción de un elemento, para ser ignorado en la solución final. Todos los elementos de $Z$ se quitan de la instancia, así como las respectivas sinergias polinomiales en las líneas \ref{alg1:update_I} y \ref{alg1:update_S}. Este proceso se ejecuta hasta que $Z$ se construye sin elementos, o hasta que ningún elemento consigue una probabilidad de ser cero menor a $\tau$. Finalmente, en la linea \ref{alg1:exact_solver} se usa un solver exacto para resolver la instancia que contiene un número reducido de elementos.
-
-
+Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa del nivel de confianza sobre la solución final obtenida. El algoritmo usa una red neuronal como clasificador, que se basa en características de cada elemento para decidir la probabilidad de estar o no en la solución final. El clasificador es entrenado antes del algoritmo general para obtener predicciones adecuadas. Estas predicciones son usadas para que los elementos tomen valores de 0\% de probabilidad y así reducir la instancia original a una más pequeña. Este proceso es ejecutado un número arbitrario de veces, mientras se mantenga la precisión del modelo, al evaluar instancias con cada vez menos elementos. El enfoque define una estructura para la red, una serie de características para elemento, dos etapas de entrenamiento y un algoritmo de evaluación que usa el clasificador entrenado para evaluar y encontrar soluciones para las instancias. La construcción del algoritmo propuesto
 
 \newcommand{\algrule}[1][.2pt]{\par\vskip.5\baselineskip\hrule height #1\par\vskip.5\baselineskip}
 
@@ -775,6 +741,30 @@ El Algoritmo \ref{alg:tunning} describe la etapa de afinación y sigue una estru
  \end{algorithm}
  
  
+\section{Resolución de Instancias}
+ 
+ \begin{algorithm}[H]
+ 	\caption{Algoritmo de evaluación}\label{alg:general}
+ 	\begin{algorithmic}[1]
+ 		\Statex \textbf{Input:} $\tau$
+ 		\Statex \textbf{Output:} $x$
+ 		\Loop
+ 		\State $F \gets$ \texttt{F($I$)}\label{alg1:full_features}
+ 		\State $\tilde{x} \gets$ \texttt{Net($F$)} \label{alg1:get_pred}
+ 		\State $Z \gets$ \texttt{Z($I$,$\tilde{x},\tau$)} \label{alg1:get_Z}
+ 		\If{$ |Z| = 0$ \textbf{or} $\min(\tilde{x}) > \tau$} \label{alg1:break_condition}
+ 		\State \textbf{break}
+ 		\EndIf
+ 		\State $I \gets I\setminus Z$ 								\label{alg1:update_I}
+ 		\State $S \gets \{A \in S, \forall i \in A: i \notin Z\}$  \label{alg1:update_S}
+ 		\EndLoop
+ 		\State $x \gets$ \texttt{Solver($I$)} \label{alg1:exact_solver} 
+ 	\end{algorithmic}
+ \end{algorithm}
+ 
+ 
+ 
+ El Algoritmo \ref{alg:general} se encarga de usar una red pre-entrenada como clasificador y resolver la instancia. Comienza dentro de un ciclo, el primer paso en la línea \ref{alg1:full_features} es generar características derivadas de los parámetros del modelo, que describan a cada elemento en particular. Estas características son usadas por la red en la línea \ref{alg1:get_pred} para generar la predicción de cada elemento. El conjunto de elementos de la instancia, la predicción de la red y el parámetro $\tau$ son usados en la línea \ref{alg1:get_Z} para generar $Z$, el conjunto de elementos a eliminar de la solución final. $\tau$ define el mínimo valor que debe tener la predicción de un elemento, para ser ignorado en la solución final. Todos los elementos de $Z$ se quitan de la instancia, así como las respectivas sinergias polinomiales en las líneas \ref{alg1:update_I} y \ref{alg1:update_S}. Este proceso se ejecuta hasta que $Z$ se construye sin elementos, o hasta que ningún elemento consigue una probabilidad de ser cero menor a $\tau$. Finalmente, en la linea \ref{alg1:exact_solver} se usa un solver exacto para resolver la instancia que contiene un número reducido de elementos.
  
  
 \clearpage
