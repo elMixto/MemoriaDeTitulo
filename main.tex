@@ -478,6 +478,14 @@ Este capítulo presenta el algoritmo propuesto para resolver el PKRP, así como 
 Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del problema de forma gradual, a costa del nivel de confianza sobre la solución final obtenida. El algoritmo usa una red neuronal como clasificador, que se basa en características de cada elemento para decidir la probabilidad de estar o no en la solución final. El clasificador es entrenado antes del algoritmo general para obtener predicciones adecuadas. Estas predicciones son usadas para que los elementos tomen valores de 0\% de probabilidad y así reducir la instancia original a una más pequeña. Este proceso es ejecutado un número arbitrario de veces, mientras se mantenga la precisión del modelo, al evaluar instancias con cada vez menos elementos. El enfoque define una estructura para la red, una serie de características para elemento, dos etapas de entrenamiento y un algoritmo de evaluación que usa el clasificador entrenado para evaluar y encontrar soluciones para las instancias.
 
 
+La metodología se desarrolla en tres etapas fundamentales. En primer lugar, se crea y entrena un clasificador basado en una red neuronal. Este clasificador está diseñado para evaluar la probabilidad de que cada elemento pertenezca a la solución final del Problema de la Mochila Probabilística Restringida (PKRP). Las características específicas de cada elemento, como el costo normalizado, el rango de costos, la variabilidad estocástica y otros, se utilizan como entrada para el clasificador.
+
+En la segunda etapa, se lleva a cabo el entrenamiento de la red neuronal en dos fases. Inicialmente, se entrena la red con soluciones óptimas generadas por un solver exacto para establecer un clasificador general. Posteriormente, se realiza una afinación más precisa utilizando pasos intermedios del algoritmo general propuesto.
+
+Finalmente, en la tercera etapa, se emplea el clasificador entrenado en el algoritmo general de evaluación. Este algoritmo iterativo busca reducir gradualmente la complejidad del PKRP, utilizando el clasificador para predecir la probabilidad de inclusión de cada elemento en la solución final. Se realiza una reducción de instancias mediante la eliminación de elementos menos probables de contribuir a la solución, manteniendo la precisión del modelo a lo largo de las iteraciones. En resumen, la metodología abarca la creación y entrenamiento del clasificador, seguido de su utilización en el algoritmo iterativo para evaluar y reducir instancias del PKRP.
+
+
+
 \begin{algorithm}[H]
 	\caption{Algoritmo de evaluación}\label{alg:general}
 	\begin{algorithmic}[1]
@@ -502,18 +510,8 @@ Se propone un algoritmo iterativo con el objetivo de reducir la complejidad del 
 El Algoritmo \ref{alg:general} se encarga de usar una red pre-entrenada como clasificador y resolver la instancia. Comienza dentro de un ciclo, el primer paso en la línea \ref{alg1:full_features} es generar características derivadas de los parámetros del modelo, que describan a cada elemento en particular. Estas características son usadas por la red en la línea \ref{alg1:get_pred} para generar la predicción de cada elemento. El conjunto de elementos de la instancia, la predicción de la red y el parámetro $\tau$ son usados en la línea \ref{alg1:get_Z} para generar $Z$, el conjunto de elementos a eliminar de la solución final. $\tau$ define el mínimo valor que debe tener la predicción de un elemento, para ser ignorado en la solución final. Todos los elementos de $Z$ se quitan de la instancia, así como las respectivas sinergias polinomiales en las líneas \ref{alg1:update_I} y \ref{alg1:update_S}. Este proceso se ejecuta hasta que $Z$ se construye sin elementos, o hasta que ningún elemento consigue una probabilidad de ser cero menor a $\tau$. Finalmente, en la linea \ref{alg1:exact_solver} se usa un solver exacto para resolver la instancia que contiene un número reducido de elementos.
 
 
-%el primer paso es definir $\mu$ el número maximo de elementos que se desean fijar como ceros en cada instancia  en la linea \ref{alg1:def_mu}. Este corresponde al número de elementos dividido en su magnitud, de forma que si la instancia posee 10.000 elementos, como máximo se fijarán 2.500 en el primer paso. 
-
-
-
 
 \newcommand{\algrule}[1][.2pt]{\par\vskip.5\baselineskip\hrule height #1\par\vskip.5\baselineskip}
-
-
-
-
-
-
 
 
 \section{Clasificador}
@@ -554,7 +552,7 @@ El clasificador utilizado es una red neuronal de tres capas de 50 nodos cada una
 			\node[shape=circle, draw=black] (Output) at (11,4.5)  {};
 			
 			% Nodo de transformación
-			\node[shape=rectangle, draw=black] (Transformation) at (13.7,4.5)  {};
+			\node[scale=1.5] (Transformation) at (13.7,4.5)  {$\tilde{x}$};
 			
 			% Conexiones en la capa de fondo
 			\begin{scope}[on background layer]
@@ -599,19 +597,19 @@ El clasificador utilizado es una red neuronal de tres capas de 50 nodos cada una
 			\node at (-1.5,3) {$f_5(i)$};
 			\node at (-1.5,2) {$f_6(i)$};
 			
+			\node at (-1,10) {Entrada};
 			\node at (2,10) {Capa $1$};
 			\node at (5,10) {Capa $2$};
 			\node at (8,10) {Capa $3$};
-			\node at (11,10) {Out};
-			\node at (14,8) {$\tanh(Out)$};
+			\node at (11,10) {Salida};
 			
 		\end{tikzpicture}
-		\caption{Estructura general de la red.}
+		\caption{Estructura general de la red neuronal.}
 		\label{fig:network}
 	\end{figure}
 
 
-La Figura \ref{fig:network} muestra la entrada de la red como un vector que contiene todas las caracteristicas del elemento $i \in I$ y genera un numero en la capa de salida 'Out'. La función de activación es tangente hiperbólica y se aplica a la capa de salida de la red para ajustar la predicción a al rango [-1,1], Luego es posible construir la predicción para el elemento con la  transformación de la ecuación \eqref{eq:soltransformation}. 
+La Figura \ref{fig:network} muestra la entrada de la red neuronal como un vector que contiene todas las características del elemento $i \in I$ y genera un número en la capa de salida. La función de activación es tangente hiperbólica que se aplica a la capa de salida de la red para ajustar la predicción a al rango [-1,1]. Luego,la predicción para cada elemento está dada por la  transformación la Ecuación \eqref{eq:soltransformation}. 
 
 
 \begin{equation}
@@ -620,16 +618,16 @@ La Figura \ref{fig:network} muestra la entrada de la red como un vector que cont
 \end{equation}
 
 
-Así, la red es una función definida como en la ecuación \eqref{eq:net_vector}, que toma como argumento el vector de características $\texttt{f($i$)} = \textbf{(}f_1(i),f_2(i),f_3(i),f_4(i),f_5(i),f_6(i)\textbf{)}$, para retornar un numero real entre cero y uno. Y se puede extender como en la ecuación \eqref{eq:net_matrix} para tomar como entrada una matriz que contiene las características de todos los elementos y obtener como resultado un vector conteniendo las probabilidades $\tilde{x_i} :\forall i \in I$, que sirve como predicación de solución para la instancia. \eqref{eq:feature_matrix}.
+Así, la red toma como argumento el vector de características $\texttt{f($i$)} = \textbf{(}f_1(i),f_2(i),f_3(i),f_4(i),f_5(i),f_6(i)\textbf{)}$, para retornar $x_i$, la predicción para el elemento $i$, entre cero y uno. Además, se puede extender como en la Ecuación \eqref{eq:net_matrix} que toma como entrada una matriz $F(I)$ como  definida en la Ecuación \eqref{eq:feature_matrix} que contiene las características de todos los elementos y obtiene como resultado el vector $\tilde{x}$ que contiene las probabilidades $\tilde{x_i} (\forall i \in I)$, que sirve como predicción de solución para la instancia.
 
 \begin{equation}
 	\label{eq:net_vector}
-	Net(f) = \tilde{x_i}: f\in [0,1]^6 \rightarrow \tilde{x}_i \in[0,1]
+	Net(f) = \tilde{x_i} \quad: f\in [0,1]^6 \rightarrow \tilde{x}_i \in[0,1]
 \end{equation}
 
 \begin{equation}
 	\label{eq:net_matrix}
-	Net(F) = \tilde{x}: F\in [0,1]^{6\times |I|} \rightarrow x \in[0,1]^{|I|}
+	Net(F) = \tilde{x}\quad: F\in [0,1]^{6\times |I|} \rightarrow x \in[0,1]^{|I|}
 \end{equation}
 
 \begin{equation}
@@ -645,8 +643,6 @@ Así, la red es una función definida como en la ecuación \eqref{eq:net_vector}
 	\right)
 	\label{eq:feature_matrix}
 \end{equation}
-
-Las características codifican los parámetros $P_i$, $C^L_i$,$C^U_i$, $\Gamma$ y $ContSol_i$ estas se definen como en las ecuaciones \eqref{feature:1} a \eqref{feature:6}.
 
 
 \begin{multicols}{2}
@@ -702,7 +698,7 @@ Entre estas:
 
 \subsection{Entrenamiento}
 
-El enfoque propuesto trabaja con dos etapas de entrenamiento. La primera etapa consiste en entrenar la red para predecir la solución óptima de cada instancia, y así crear un clasificador general. La segunta etapa afina la precisión usando de los pasos intermedios del algoritmo de evaluación (\ref{alg:general}). Además, la red se entrena con soluciones que son generadas por un solver exacto que calcula el óptimo para cada instancia. 
+La primera etapa consiste en entrenar la red para predecir la solución óptima de cada instancia, y así crear un clasificador general. La segunta etapa afina la precisión usando de los pasos intermedios del algoritmo de evaluación (\ref{alg:general}). Además, la red se entrena con soluciones que son generadas por un solver exacto que calcula el óptimo para cada instancia. 
 
 \begin{algorithm}[H]
 	\caption{Entrenamiento}\label{alg:training}
